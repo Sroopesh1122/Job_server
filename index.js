@@ -5,6 +5,10 @@ import { DBConnection } from  './config/DBConfig.js';
 
 import dotenv from 'dotenv'
 import { UserRouter } from './routers/UserRouter.js';
+import { qulificationRouter } from './routers/QualificationRouter.js';
+import { providerRouter } from './routers/ProviderRouter.js';
+import { JobAppRouter } from './routers/JobAppRouter.js';
+import { ProjectAppRouter } from './routers/ProjectAppRouter.js';
 
 
 dotenv.config()
@@ -20,6 +24,11 @@ const port = process.env.PORT || 5000;
 
 
 app.use("/user",UserRouter)
+app.use("/provider",providerRouter)
+app.use("/qualifications",qulificationRouter)
+app.use("/jobs",JobAppRouter)
+app.use("/projects",ProjectAppRouter)
+
 
 
 app.use(notFound)

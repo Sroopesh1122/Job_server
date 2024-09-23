@@ -27,7 +27,6 @@ import crypto from 'crypto'
   auth_details:{
     role:{
        type :String,
-       enum:['seeker','provider'],
        default:'seeker',
     },
     password :{
@@ -42,7 +41,17 @@ import crypto from 'crypto'
       type:Date,
       default:null
     },
-  }
+  },
+  profile_details:{
+    qualification:{
+      type:String,
+      default:null
+    },
+    skills:[{
+      type:String
+    }],
+  },
+  
   
 },{timestamps:true});
 

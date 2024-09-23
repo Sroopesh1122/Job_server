@@ -1,28 +1,24 @@
 import asyncHandler from "express-async-handler";
-import userModal from "../modals/User.js";
 import jwt from "jsonwebtoken";
 import crypto from 'crypto'
+import { providerModal } from "../modals/JobProvider.js";
 
-export const signup = asyncHandler(async (req, res) => {
-  const { email, password, name } = req.body;
-  let { role } = req.body;
+export const providerSignup = asyncHandler(async (req, res) => {
+  const { email, password, company_name } = req.body;
 
-  if (!email || !password || !name) {
+  if (!email || !password || !company_name) {
     throw new Error("All Fields Required!!");
   }
-  // if (!role) {
-  //   role = "provider";
-  // }
   try {
-    const findUser = await userModal.findOne({ "personal_info.email": email });
+    const findUser = await providerModal.findOne({"email": email });
     if (findUser) {
       throw new Error("Email Already Exists");
     }
     const data = {
-       name, email ,
+       company_name, email ,
       auth_details: { password },
     };
-    const user = await userModal.create(data);
+    const user = await providerModal.create(data);
     if (user) {
       res.json(user);
     } else {
@@ -33,13 +29,13 @@ export const signup = asyncHandler(async (req, res) => {
   }
 });
 
-export const signin = asyncHandler(async (req, res) => {
+export const providerSignin = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     throw new Error("All Fields Required!!");
   }
   try {
-    const user = await userModal.findOne({ "email": email });
+    const user = await providerModal.findOne({ "email": email });
     if (!user) {
       throw new Error("Account Not found");
     }
@@ -57,10 +53,10 @@ export const signin = asyncHandler(async (req, res) => {
   }
 });
 
-export const updateUser = asyncHandler(async (req, res) => {
+export const providerUpdateUser = asyncHandler(async (req, res) => {
   const { _id } = req.user;
   try {
-    const user = await userModal.findByIdAndUpdate(_id, req.body ,{new:true});
+    const user = await providerModal.findByIdAndUpdate(_id, req.body ,{new:true});
     if (user) {
       res.json(user);
     } else {
@@ -72,36 +68,15 @@ export const updateUser = asyncHandler(async (req, res) => {
 });
 
 
-export const getUser = asyncHandler(async(req,res)=>{
-  const {_id} = req.user;
-  const findUser = await userModal.findById(_id);
-  if(!findUser)
-  {
-    throw new Error("User Not Found")
-  }
-  return res.json(findUser);
-})
 
-export const getUserById = asyncHandler(async(req,res)=>{
-  const {id} = req.params;
-  const findUser = await userModal.findById(id);
-  if(!findUser)
-  {
-    throw new Error("User Not Found")
-  }
-  return res.json(findUser);
-})
-
-
-
-export const forgotPasswordHandler = asyncHandler(async(req,res)=>{
+export const ProviderForgotPasswordHandler = asyncHandler(async(req,res)=>{
   const { email } = req.body;
   if(!email)
   {
     throw new Error("Email required!!")
   }
   try {
-    const user = await userModal.findOne({"email":email});
+    const user = await providerModal.findOne({"email":email});
     if(!user)
     {
       throw new Error("Account Not Found");
@@ -119,12 +94,15 @@ export const forgotPasswordHandler = asyncHandler(async(req,res)=>{
 })
 
 
-export const passwordResetHandler = asyncHandler(async(req,res)=>{
+export const ProviderPasswordResetHandler = asyncHandler(async(req,res)=>{
+
+  
+  
   const {token} = req.params;
   const {password} = req.body;
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex")
   try {
-    const user = await userModal.findOne({"auth_details.passwordResetToken":hashedToken});
+    const user = await providerModal.findOne({"auth_details.passwordResetToken":hashedToken});
     if(!user)
     {
       throw new Error("Invalid token");
@@ -145,4 +123,16 @@ export const passwordResetHandler = asyncHandler(async(req,res)=>{
   } catch (error) {
     throw new Error(error);
   }
+})
+
+
+export const providerGetProfile= asyncHandler(async(req,res)=>{
+  const {_id} = req.user;
+
+  const findAccount  = await providerModal.findById(_id);
+  if(!findAccount)
+  {
+    throw new Error("Account Not found");
+  }
+  return res.json(findAccount);
 })

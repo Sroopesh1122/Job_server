@@ -1,34 +1,56 @@
 import asyncHandler from "express-async-handler";
-import userModal from '../modals/User.js';
-import jwt from 'jsonwebtoken';
+import userModal from "../modals/User.js";
+import jwt, { decode } from "jsonwebtoken";
+import { providerModal } from "../modals/JobProvider.js";
 
-
-export const authMiddleware = asyncHandler(async(req,res,next)=>{
-    let token=null;
-  if(req?.headers?.authorization)
-  {
-     token=req?.headers?.authorization.split(" ")[1]
-     try {
-          const decoded = jwt.verify(token, process.env.JWT_SECRET_TOKEN);
-          const user = await userModal.findById(decoded);
-          req.user = user;
-          next();
-        } catch (error) {
-          throw new Error("Not Authorized token expired ");
-        }
-  }
-  else{
+export const authUserMiddleware = asyncHandler(async (req, res, next) => {
+  let token = null;
+  if (req?.headers?.authorization) {
+    token = req?.headers?.authorization.split(" ")[1];
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET_TOKEN);
+    } catch (error) {
+      throw new Error("Not Authorized token expired ");
+    }
+    const user = await userModal.findById(decoded);
+    if (!user) {
+      throw new Error("Account Not Found");
+    }
+    req.user = user;
+    next();
+  } else {
     throw new Error("There is no token attached to header");
   }
-})
+});
 
-
-export const isAdmin =asyncHandler(async(req,res,next)=>{
-  if(req?.user?.auth_details?.role === "admin")
-  {
-     next();
+export const authProviderMiddleware = asyncHandler(async (req, res, next) => {
+  let token = null;
+  if (req?.headers?.authorization) {
+    token = req?.headers?.authorization.split(" ")[1];
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET_TOKEN);
+    } catch (error) {
+      throw new Error("Not Authorized token expired ");
+    }
+    const user = await providerModal.findById(decoded);
+    if (!user) {
+      throw new Error("Account Not Found");
+    }
+    req.user = user;
+    next();
+  } else {
+    throw new Error("There is no token attached to header");
   }
-  else{
+});
+
+export const isAdmin = asyncHandler(async (req, res, next) => {
+  if (req?.user?.auth_details?.role === "admin") {
+    next();
+  } else {
     throw new Error("Access Denied for users");
   }
-})
+});
+
+
