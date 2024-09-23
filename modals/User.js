@@ -51,6 +51,11 @@ import crypto from 'crypto'
       type:String
     }],
   },
+
+  application_applied_info:{
+     jobs:[{type : mongoose.Types.ObjectId,ref:"appliactions"}],
+     projects : [{type : mongoose.Types.ObjectId,ref:"projects"}]
+  }
   
   
 },{timestamps:true});

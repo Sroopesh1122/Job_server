@@ -2,6 +2,9 @@ import asyncHandler from "express-async-handler";
 import userModal from "../modals/User.js";
 import jwt from "jsonwebtoken";
 import crypto from 'crypto'
+import { jobApplicationModal } from "../modals/JobApplication.js";
+import { ProjectApplicationModal } from "../modals/ProjectApplication.js";
+import { isValidObjectId } from "mongoose";
 
 export const signup = asyncHandler(async (req, res) => {
   const { email, password, name } = req.body;
@@ -92,8 +95,6 @@ export const getUserById = asyncHandler(async(req,res)=>{
   return res.json(findUser);
 })
 
-
-
 export const forgotPasswordHandler = asyncHandler(async(req,res)=>{
   const { email } = req.body;
   if(!email)
@@ -146,3 +147,53 @@ export const passwordResetHandler = asyncHandler(async(req,res)=>{
     throw new Error(error);
   }
 })
+
+export const addJobPost = asyncHandler(async(req,res)=>{
+  const {_id} = req.user;
+  const {postId } = req.body;
+  if(!postId)
+    {
+      throw new Error("All fields Required");
+    }
+    if(!isValidObjectId(postId))
+    {
+      throw new Error("Invalid Id")
+    }
+  const findPost = await jobApplicationModal.findById(postId);
+  if(!findPost)
+  {
+    throw new Error("Post not found!!")
+  }
+
+  const user = await userModal.findById(_id);
+  user.application_applied_info.jobs.push(postId);
+  await user.save();
+  res.json({success:true});
+})
+
+export const addprojectPost = asyncHandler(async(req,res)=>{
+  const {_id} = req.user;
+  const {postId } = req.body;
+  if(!postId)
+  {
+    throw new Error("All fields Required");
+  }
+  if(!isValidObjectId(postId))
+    {
+      throw new Error("Invalid Id")
+    }
+
+  const findPost = await ProjectApplicationModal.findById(postId);
+  if(!findPost)
+  {
+    throw new Error("Post not found!!")
+  }
+
+  const user = await userModal.findById(_id);
+  user.application_applied_info.projects.push(postId);
+  await user.save();
+  res.json({success:true});
+})
+
+
+
