@@ -5,6 +5,7 @@ import crypto from 'crypto'
 import { jobApplicationModal } from "../modals/JobApplication.js";
 import { ProjectApplicationModal } from "../modals/ProjectApplication.js";
 import { isValidObjectId } from "mongoose";
+import { sendMail } from "../utils/MailSender.js";
 
 export const signup = asyncHandler(async (req, res) => {
   const { email, password, name } = req.body;
@@ -16,8 +17,10 @@ export const signup = asyncHandler(async (req, res) => {
   // if (!role) {
   //   role = "provider";
   // }
+
+  
   try {
-    const findUser = await userModal.findOne({ "personal_info.email": email });
+    const findUser = await userModal.findOne({"email": email });
     if (findUser) {
       throw new Error("Email Already Exists");
     }
@@ -110,6 +113,14 @@ export const forgotPasswordHandler = asyncHandler(async(req,res)=>{
     const resetToken = await user.generatePasswordResetToken();
     await user.save();
     if (user) {
+      const resetURL = `Hi ,Please follow this link to reset your password . This is valid till 10 minutes from now. <a href='http://localhost:3000/reset-password/${resetToken}'>Click now</a>`;
+    const data = {
+      to: email,
+      text: "Hey user",
+      subject: "Forgot passowrd (Reset Password)",
+      htm: resetURL,
+    };
+      sendMail(data);
       res.json({resetToken});
     } else {
       throw new Error("Profile Update Failed");
@@ -125,11 +136,12 @@ export const passwordResetHandler = asyncHandler(async(req,res)=>{
   const {password} = req.body;
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex")
   try {
-    const user = await userModal.findOne({"auth_details.passwordResetToken":hashedToken});
+    const user = await userModal.findOne({"auth_details.passwordResetToken":hashedToken });
     if(!user)
     {
       throw new Error("Invalid token");
     }
+    
     if(Date.now() >  user.auth_details.passwordResetExpiresAt)
     {
       throw new Error("Token expired! ,Try Again later")
