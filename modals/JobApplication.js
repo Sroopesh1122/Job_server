@@ -23,7 +23,11 @@ const applicationSchema = new mongoose.Schema({
     provider_details :{
         type : mongoose.Types.ObjectId,
         ref:"providers"
-    }
+    },
+    applied_ids:[{
+        type:mongoose.Types.ObjectId,
+        ref:"users"
+    }]
 },{
     timestamps:true
 })

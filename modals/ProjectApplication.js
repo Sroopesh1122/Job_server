@@ -21,7 +21,8 @@ const projectApplicationSchema = new mongoose.Schema({
     provider:{
         type:mongoose.Types.ObjectId,
         ref:"providers"
-    }
+    },
+    applied_ids:[{type:mongoose.Types.ObjectId,ref:"users"}]
 },{
     timestamps:true
 })

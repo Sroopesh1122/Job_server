@@ -164,7 +164,15 @@ export const addJobPost = asyncHandler(async(req,res)=>{
   {
     throw new Error("Post not found!!")
   }
+  //adding applied user details to application
+  if(findPost.applied_ids.find((i)=>i.toString() === _id.toString()))
+  {
+    throw new Error("Already applied for this post");
+  }
 
+
+  findPost.applied_ids.push(_id);
+  await findPost.save();
   const user = await userModal.findById(_id);
   user.application_applied_info.jobs.push(postId);
   await user.save();
@@ -188,7 +196,12 @@ export const addprojectPost = asyncHandler(async(req,res)=>{
   {
     throw new Error("Post not found!!")
   }
-
+  if(findPost.applied_ids.find((i)=>i.toString() === _id.toString()))
+    {
+      throw new Error("Already applied for this post");
+    }
+  findPost.applied_ids.push(_id);
+  await findPost.save();
   const user = await userModal.findById(_id);
   user.application_applied_info.projects.push(postId);
   await user.save();
