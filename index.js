@@ -9,6 +9,7 @@ import { qulificationRouter } from './routers/QualificationRouter.js';
 import { providerRouter } from './routers/ProviderRouter.js';
 import { JobAppRouter } from './routers/JobAppRouter.js';
 import { ProjectAppRouter } from './routers/ProjectAppRouter.js';
+import { skillsRouter } from './routers/SkillsRouter.js';
 
 
 dotenv.config()
@@ -26,6 +27,7 @@ const port = process.env.PORT || 5000;
 app.use("/user",UserRouter)
 app.use("/provider",providerRouter)
 app.use("/qualifications",qulificationRouter)
+app.use("/skills",skillsRouter)
 app.use("/jobs",JobAppRouter)
 app.use("/projects",ProjectAppRouter)
 

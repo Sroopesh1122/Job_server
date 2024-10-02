@@ -2,6 +2,7 @@ import asyncHandler from "express-async-handler";
 import { jobApplicationModal } from "../modals/JobApplication.js";
 import { isValidObjectId } from "mongoose";
 import { providerModal } from "../modals/JobProvider.js";
+import { jobCategories } from "../assets/Jobs.js";
 
 
 export const createJobPost = asyncHandler(async (req, res) => {
@@ -71,3 +72,11 @@ export const deleteJobPost = asyncHandler(async (req, res) => {
   await provider.save();
   res.json({ success: true });
 });
+
+
+
+export const getAllCategoriesAndSubCategories =asyncHandler((req,res)=>{
+
+    res.json(jobCategories)
+
+})
