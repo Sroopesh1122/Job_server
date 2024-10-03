@@ -9,11 +9,11 @@ export const authUserMiddleware = asyncHandler(async (req, res, next) => {
     token = req?.headers?.authorization.split(" ")[1];
     let decoded;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET_TOKEN);
+      decoded = await jwt.verify(token, process.env.JWT_SECRET_TOKEN)
     } catch (error) {
       throw new Error("Not Authorized token expired ");
     }
-    const user = await userModal.findById(decoded);
+    const user = await userModal.findOne({user_id : decoded.userId});
     if (!user) {
       throw new Error("Account Not Found");
     }
@@ -34,7 +34,7 @@ export const authProviderMiddleware = asyncHandler(async (req, res, next) => {
     } catch (error) {
       throw new Error("Not Authorized token expired ");
     }
-    const user = await providerModal.findById(decoded);
+    const user = await providerModal.findOne({company_id : decoded.userId});
     if (!user) {
       throw new Error("Account Not Found");
     }

@@ -1,13 +1,27 @@
 import { Router } from "express";
-import { ProviderForgotPasswordHandler, ProviderPasswordResetHandler, providerSignin, providerSignup, providerUpdateUser } from "../controllers/ProviderController.js";
+import {
+  changeJobApplicationStatus,
+  getProviderProfileById,
+  ProviderForgotPasswordHandler,
+  providerGetProfile,
+  ProviderPasswordResetHandler,
+  providerSignin,
+  providerSignup,
+  providerUpdateUser,
+} from "../controllers/ProviderController.js";
 import { authProviderMiddleware } from "../middlewares/AuthHandler.js";
 
+export const providerRouter = Router();
 
-export const providerRouter  = Router();
-
-providerRouter.post("/create",providerSignup);
-providerRouter.post("/login",providerSignin);
-providerRouter.put("/update",authProviderMiddleware,providerUpdateUser);
-providerRouter.post("/forgot-password",ProviderForgotPasswordHandler);
-providerRouter.post("/reset-password",ProviderPasswordResetHandler);
-
+providerRouter.post("/create", providerSignup);
+providerRouter.post("/login", providerSignin);
+providerRouter.put("/update", authProviderMiddleware, providerUpdateUser);
+providerRouter.put(
+  "/job/status",
+  authProviderMiddleware,
+  changeJobApplicationStatus
+);
+providerRouter.post("/forgot-password", ProviderForgotPasswordHandler);
+providerRouter.post("/reset-password", ProviderPasswordResetHandler);
+providerRouter.get("/profile", authProviderMiddleware, providerGetProfile);
+providerRouter.get("/:id", authProviderMiddleware, getProviderProfileById);

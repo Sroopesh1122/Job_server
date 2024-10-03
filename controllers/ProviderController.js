@@ -2,6 +2,7 @@ import asyncHandler from "express-async-handler";
 import jwt from "jsonwebtoken";
 import crypto from 'crypto'
 import { providerModal } from "../modals/JobProvider.js";
+import { jobApplicationModal } from "../modals/JobApplication.js";
 
 export const providerSignup = asyncHandler(async (req, res) => {
   const { email, password, company_name } = req.body;
@@ -19,8 +20,14 @@ export const providerSignup = asyncHandler(async (req, res) => {
       auth_details: { password },
     };
     const user = await providerModal.create(data);
+
+    const resdata = {
+      userId: user.company_id,
+      docId: user._id
+    };
+
     if (user) {
-      res.json(user);
+      res.json({user , token : await jwt.sign(resdata,process.env.JWT_SECRET_TOKEN)});
     } else {
       throw new Error("Account Creation Failed");
     }
@@ -39,15 +46,17 @@ export const providerSignin = asyncHandler(async (req, res) => {
     if (!user) {
       throw new Error("Account Not found");
     }
+
     if (!(await user.isPasswordMatched(password))) {
       throw new Error("Incorrect password");
     }
 
     const resdata = {
-      token: await jwt.sign(user?.id, process.env.JWT_SECRET_TOKEN),
+      userId: user.company_id,
+      docId: user._id
     };
 
-    res.json(resdata);
+    res.json(await jwt.sign(resdata,process.env.JWT_SECRET_TOKEN));
   } catch (error) {
     throw new Error(error);
   }
@@ -135,4 +144,52 @@ export const providerGetProfile= asyncHandler(async(req,res)=>{
     throw new Error("Account Not found");
   }
   return res.json(findAccount);
+})
+
+export const getProviderProfileById= asyncHandler(async(req,res)=>{
+  const {id} = req.params;
+
+  console.log(id)
+
+  const findAccount = await providerModal.findOne({company_id : id});
+  if(!findAccount)
+  {
+    throw new Error("Account Not found");
+  }
+  return res.json(findAccount);
+})
+
+export const changeJobApplicationStatus = asyncHandler(async(req,res)=>{
+
+  const {_id ,company_id} = req.user;
+
+  const { applicationId ,status ,user} = req.body;
+
+  if(!applicationId || !status || !user)
+  {
+    throw new Error("ApplicationId Or status Or userId is Required!!");
+  }
+
+  const findPost = await jobApplicationModal.findOne({job_id : applicationId});
+  if(!findPost)
+  {
+    throw new Error("Application Post not found!!")
+  }
+
+  if(findPost.provider_details !== company_id)
+  {
+    throw new Error("Only Auth user can access")
+  }
+
+  if(await jobApplicationModal.findOne({job_id : applicationId , "applied_ids.userId":user}))
+  {
+    if(await jobApplicationModal.findOneAndUpdate({job_id : applicationId , "applied_ids.userId":user},{$set: { "applied_ids.$.status": status }},{new:true}))
+    {
+      res.json({success:true})
+    }
+   
+  }
+  else{
+    throw new Error("Applicant not found")
+  }
 })

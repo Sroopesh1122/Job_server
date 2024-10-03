@@ -1,36 +1,97 @@
 import mongoose from "mongoose";
-
+import { getRandomIds } from "../utils/generateRandomIds.js";
+import { parsePackage } from "../utils/commonUtils.js";
 
 const applicationSchema = new mongoose.Schema({
-    name:{
-        type:String,
-        required:true,
-        trime:true
+  title: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  description: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  job_id: {
+    type: String, 
+    unique: true, 
+  },
+  vacancy: {
+    type: Number,
+    validate: {
+      validator: function (v) {
+        return v >= 0;
+      },
+      message: (props) => `${props.value} is not a valid vacancy number!`,
     },
-    description:{
-        type:String,
-        required:true,
-        trime:true
-    },
-    salary:{
-        amount:{type:Number , required:true},
-        unit : {type:String , required:true}
-    },
-    qualification:{
-        type:String,
-        required:true
-    },
-    provider_details :{
-        type : mongoose.Types.ObjectId,
-        ref:"providers"
-    },
-    applied_ids:[{
-        type:mongoose.Types.ObjectId,
-        ref:"users"
-    }]
-},{
-    timestamps:true
-})
+  },
+  package: {
+    type: String,
+  },
+  packageMin: {type: Number },  
+  packageMax: {type: Number },
+  location: [{
+    type: String,  //can have multiple locations
+  }],
+  job_category: {
+    type: String,
+  },
+  job_subcategory: {
+    type: String,
+  },
+  qualification: [{
+    type: String,
+  }],
+  type: {
+    type: String,
+    enum: ['Full Time', 'Part Time', 'Hybrid', 'Remote'],
+    default: 'Full Time',
+  },
+  provider_details: {
+    type: String  // provider Id
+  },
+  applied_ids: [{
+    userId : {type: String},
+    status :  {type:String}
+  }],
+}, {
+  timestamps: true,
+});
+
+// Middleware to generate a custom job_id starting with "APP-" and with a total length of 12 characters
+
+
+applicationSchema.pre("save", async function (next) {
+  if (!this.job_id) {
+    let isUnique = false;
+    let retries = 0;
+    const maxRetries = 5;  // limit the number of retries to prevent infinite loops
+
+    while (!isUnique && retries < maxRetries) {
+      const randomString = getRandomIds({ prefix: 'APP-' });
+
+      // Check for uniqueness in the collection
+      const existingApplication = await jobApplicationModal.findOne({ job_id: randomString });
+
+      if (!existingApplication) {
+        this.job_id = randomString;
+        isUnique = true; // Unique ID found
+      } else {
+        retries += 1; // Increment retries if collision occurs
+      }
+    }
+
+    if (!isUnique) {
+      return next(new Error('Failed to generate a unique job ID after several attempts.'));
+    }
+  }
+
+    const { min, max } = parsePackage(this.package);
+    this.packageMin = min;
+    this.packageMax = max;
+    next();
+});
 
 
 export const jobApplicationModal = mongoose.model("applications",applicationSchema)

@@ -9,16 +9,10 @@ import { sendMail } from "../utils/MailSender.js";
 
 export const signup = asyncHandler(async (req, res) => {
   const { email, password, name } = req.body;
-  let { role } = req.body;
-
   if (!email || !password || !name) {
     throw new Error("All Fields Required!!");
   }
-  // if (!role) {
-  //   role = "provider";
-  // }
 
-  
   try {
     const findUser = await userModal.findOne({"email": email });
     if (findUser) {
@@ -29,8 +23,12 @@ export const signup = asyncHandler(async (req, res) => {
       auth_details: { password },
     };
     const user = await userModal.create(data);
+    const resdata = {
+      userId: user.user_id,
+      docId: user._id
+    };
     if (user) {
-      res.json(user);
+      res.json({user , auth_tokens:await jwt.sign(resdata, process.env.JWT_SECRET_TOKEN)});
     } else {
       throw new Error("Account Creation Failed");
     }
@@ -54,10 +52,13 @@ export const signin = asyncHandler(async (req, res) => {
     }
 
     const resdata = {
-      token: await jwt.sign(user?.id, process.env.JWT_SECRET_TOKEN),
+      userId: user.user_id,
+      docId: user._id
     };
 
-    res.json(resdata);
+
+
+    res.json(await jwt.sign(resdata, process.env.JWT_SECRET_TOKEN));
   } catch (error) {
     throw new Error(error);
   }
@@ -78,6 +79,9 @@ export const updateUser = asyncHandler(async (req, res) => {
 });
 
 
+
+
+
 export const getUser = asyncHandler(async(req,res)=>{
   const {_id} = req.user;
   const findUser = await userModal.findById(_id);
@@ -88,15 +92,18 @@ export const getUser = asyncHandler(async(req,res)=>{
   return res.json(findUser);
 })
 
+
 export const getUserById = asyncHandler(async(req,res)=>{
   const {id} = req.params;
-  const findUser = await userModal.findById(id);
+  let findUser = await userModal.findOne({user_id : id});
   if(!findUser)
   {
-    throw new Error("User Not Found")
-  }
+        throw new Error("User Not Found")
+    
+    }
   return res.json(findUser);
 })
+
 
 export const forgotPasswordHandler = asyncHandler(async(req,res)=>{
   const { email } = req.body;
@@ -160,36 +167,39 @@ export const passwordResetHandler = asyncHandler(async(req,res)=>{
   }
 })
 
+
+
+// add job and project frunctionality
+
+
+
 export const addJobPost = asyncHandler(async(req,res)=>{
-  const {_id} = req.user;
-  const {postId } = req.body;
-  if(!postId)
-    {
-      throw new Error("All fields Required");
-    }
-    if(!isValidObjectId(postId))
-    {
-      throw new Error("Invalid Id")
-    }
-  const findPost = await jobApplicationModal.findById(postId);
+  const {_id ,user_id} = req.user;
+  const { applicationId } = req.body;
+  if(!applicationId)
+  {
+      throw new Error("Application is Required!!");
+  }
+  const findPost = await jobApplicationModal.findOne({job_id : applicationId});
   if(!findPost)
   {
-    throw new Error("Post not found!!")
+    throw new Error("Application Post not found!!")
   }
   //adding applied user details to application
-  if(findPost.applied_ids.find((i)=>i.toString() === _id.toString()))
+  if(await jobApplicationModal.findOne({"applied_ids.userId" : user_id , job_id : applicationId}))
   {
     throw new Error("Already applied for this post");
   }
 
-
-  findPost.applied_ids.push(_id);
+  findPost.applied_ids.push({userId:user_id,status:"Applied"});
   await findPost.save();
   const user = await userModal.findById(_id);
-  user.application_applied_info.jobs.push(postId);
+  user.application_applied_info.jobs.push({jobId: applicationId});
   await user.save();
-  res.json({success:true});
+  res.json({success:true , applied_list : [...user.application_applied_info.jobs]});
+
 })
+
 
 export const addprojectPost = asyncHandler(async(req,res)=>{
   const {_id} = req.user;
