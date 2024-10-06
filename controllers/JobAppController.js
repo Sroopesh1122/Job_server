@@ -164,6 +164,10 @@ export const getAllJobPost = asyncHandler(async (req, res) => {
   // Unwind the provider_info array if you want a flat structure
   query.push({ $unwind: { path: "$provider_info", preserveNullAndEmptyArrays: true } });
 
+
+
+ 
+
   query.push({
     $project: {
       provider_info: {
@@ -172,11 +176,11 @@ export const getAllJobPost = asyncHandler(async (req, res) => {
     },
   });
 
-
   const skip = (page - 1) * limit;
+   
+  query.push({ $skip: parseInt(skip) });
+  query.push({ $limit: parseInt(limit)});
 
-  query.push({ $skip: skip });
-  query.push({ $limit: limit });
   const results = await jobApplicationModal.aggregate(query);
 
   res.json(results);

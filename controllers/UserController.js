@@ -127,7 +127,11 @@ export const forgotPasswordHandler = asyncHandler(async(req,res)=>{
       subject: "Forgot passowrd (Reset Password)",
       htm: resetURL,
     };
-      sendMail(data);
+      try {
+        await sendMail(data);
+      } catch (error) {
+        console.log(error)
+      }
       res.json({resetToken});
     } else {
       throw new Error("Profile Update Failed");

@@ -159,6 +159,13 @@ export const getProviderProfileById= asyncHandler(async(req,res)=>{
   return res.json(findAccount);
 })
 
+export const getAllProviders= asyncHandler(async(req,res)=>{
+  const {limit} = req.query;
+
+  const findAccounts = await providerModal.find({},{"auth_details":0}).limit(parseInt(limit));
+  return res.json(findAccounts);
+})
+
 export const changeJobApplicationStatus = asyncHandler(async(req,res)=>{
 
   const {_id ,company_id} = req.user;
