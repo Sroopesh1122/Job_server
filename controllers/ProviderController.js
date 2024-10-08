@@ -151,12 +151,32 @@ export const getProviderProfileById= asyncHandler(async(req,res)=>{
 
   console.log(id)
 
-  const findAccount = await providerModal.findOne({company_id : id});
+  const query =[];
+
+  const matchStage = {};
+
+  matchStage.company_id = id;
+
+
+  query.push({$match : matchStage})
+
+  query.push({
+    $lookup: {
+      from: "applications",
+      localField: "job_details.jobs.jobId",
+      foreignField: "job_id", // Adjust based on your actual field name in the providers collection
+      as: "Applications_info",
+    },
+  });
+
+  const findAccount = await providerModal.aggregate(query)
   if(!findAccount)
   {
     throw new Error("Account Not found");
   }
-  return res.json(findAccount);
+  // setTimeout(()=>{
+    return res.json({accountData : findAccount[0]});
+  // },8000)
 })
 
 export const getAllProviders= asyncHandler(async(req,res)=>{
