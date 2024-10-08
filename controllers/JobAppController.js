@@ -63,7 +63,32 @@ export const createJobPost = asyncHandler(async (req, res) => {
 
 export const getJobPost = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const findPost = await jobApplicationModal.findOne({ job_id: id });
+  const {applied_details}= req.body;
+
+  const query =[];
+  const matchStage={};
+  matchStage.job_id = id;
+
+  query.push({$match : matchStage})
+
+  if(applied_details)
+  {
+     query.push({
+      $lookup: {
+      from: "users",
+      localField: "applied_ids.userId",
+      foreignField: "user_id", // Adjust based on your actual field name in the providers collection
+      as: "User_info",
+    }})
+
+    query.push({
+      $project:{
+        "User_info.auth_details":0
+      }
+    })
+  }
+
+  const findPost = await jobApplicationModal.aggregate(query);
   if (!findPost) {
     throw new Error("Post not found");
   }
@@ -186,7 +211,7 @@ export const getAllJobPost = asyncHandler(async (req, res) => {
   res.json(results);
 });
 
-
+` `
 
 export const deleteJobPost = asyncHandler(async (req, res) => {
   const { _id } = req.user;

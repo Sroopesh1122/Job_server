@@ -15,6 +15,5 @@ UserRouter.post("/forgot-password",forgotPasswordHandler);
 UserRouter.post("/reset-password/:token",passwordResetHandler);
 UserRouter.get("/profile",authUserMiddleware,getUser);
 UserRouter.get("/:id",getUserById)
-
 UserRouter.post("/job/apply",authUserMiddleware,addJobPost);
 UserRouter.post("/project",authUserMiddleware,addprojectPost)
