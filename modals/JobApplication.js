@@ -21,10 +21,19 @@ const applicationSchema = new mongoose.Schema({
     type: Number,
     validate: {
       validator: function (v) {
-        return v >= 0;
+        return v > 0;
       },
       message: (props) => `${props.value} is not a valid vacancy number!`,
     },
+  },
+  experience:{
+   type:Number,
+   validate: {
+    validator: function (v) {
+      return v > 0;
+    },
+    message: (props) => `${props.value} is not a valid vacancy number!`,
+  },
   },
   package: {
     type: String,
@@ -32,35 +41,40 @@ const applicationSchema = new mongoose.Schema({
   packageMin: {type: Number },  
   packageMax: {type: Number },
   location: [{
-    type: String,  //can have multiple locations
+    type: String, 
   }],
-  job_category: {
-    type: String,
-  },
-  job_subcategory: {
-    type: String,
-  },
-  qualification: [{
+  qualification:[ {
     type: String,
   }],
+  specification: [{
+    type: String,
+  }],
+  must_skills:[{type:String}],
+  other_skills:[{type:String}],
   type: {
     type: String,
     enum: ['Full Time', 'Part Time', 'Hybrid', 'Remote'],
     default: 'Full Time',
   },
   provider_details: {
-    type: String  // provider Id
+    type: String  
   },
   applied_ids: [{
     userId : {type: String},
     status :  {type:String}
   }],
+  postedBy:{
+    type:String,
+    default:"admin"
+  },
+  job_role:{
+    type:String
+  }
 }, {
   timestamps: true,
 });
 
 // Middleware to generate a custom job_id starting with "APP-" and with a total length of 12 characters
-
 
 applicationSchema.pre("save", async function (next) {
   if (!this.job_id) {

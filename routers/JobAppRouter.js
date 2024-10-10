@@ -15,6 +15,8 @@ JobAppRouter.post("/create", authProviderMiddleware, createJobPost);
 JobAppRouter.delete("/:id", authProviderMiddleware, deleteJobPost);
 JobAppRouter.get("/category", getAllCategoriesAndSubCategories);
 JobAppRouter.get("/:id", getJobPost);
+
+//remove it later 
 JobAppRouter.get("/sample/jobs", async (req, res) => {
   const { page } = req.query;
 
@@ -27,3 +29,4 @@ JobAppRouter.get("/sample/jobs", async (req, res) => {
   }, 5000);
 });
 JobAppRouter.get("/", getAllJobPost);
+

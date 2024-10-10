@@ -70,6 +70,16 @@ const providerSchema = new mongoose.Schema(
         },
       ],
     },
+    project_details: {
+      projects: [
+        {
+          projectId: { type: String},
+        },
+      ],
+    },
+    followers:[{
+      type:String
+    }]
   },
   { timestamps: true }
 );

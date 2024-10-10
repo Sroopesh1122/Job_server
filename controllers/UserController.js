@@ -6,6 +6,7 @@ import { jobApplicationModal } from "../modals/JobApplication.js";
 import { ProjectApplicationModal } from "../modals/ProjectApplication.js";
 import { isValidObjectId } from "mongoose";
 import { sendMail } from "../utils/MailSender.js";
+import { providerModal } from "../modals/JobProvider.js";
 
 export const signup = asyncHandler(async (req, res) => {
   const { email, password, name } = req.body;
@@ -232,6 +233,57 @@ export const addprojectPost = asyncHandler(async(req,res)=>{
   user.application_applied_info.projects.push(postId);
   await user.save();
   res.json({success:true});
+})
+
+
+export const followCompany = asyncHandler(async(req,res)=>{
+  const {companyId} = req.body;
+  const {user_id} = req.user;
+
+  if(!companyId)
+  {
+    throw new Error("Company Id required!!")
+  }
+  
+  const company =  await providerModal.findOne({company_id:companyId});
+  if(!company)
+  {
+    throw new Error("Company Not Found!");
+  }
+
+  if(company.followers.find((id)=> id ===user_id))
+  {
+    throw new Error("Already following");
+  }
+
+  company.followers.push(user_id);
+  await company.save();
+  return res.json({"success":true})
+})
+
+export const unfollowCompany = asyncHandler(async(req,res)=>{
+  const {companyId} = req.body;
+  const {user_id} = req.user;
+
+  if(!companyId)
+  {
+    throw new Error("Company Id required!!")
+  }
+  
+  const company =  await providerModal.findOne({company_id:companyId});
+  if(!company)
+  {
+    throw new Error("Company Not Found!");
+  }
+
+  if(company.followers.find((id)=> id !== user_id))
+    {
+      throw new Error("user id not found");
+    }
+  
+  company.followers =  company.followers.filter((id)=>id !== user_id);
+  await company.save();
+  return res.json({"success":true})
 })
 
 

@@ -63,7 +63,7 @@ export const createJobPost = asyncHandler(async (req, res) => {
 
 export const getJobPost = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const {applied_details}= req.body;
+  const {applied_details,page=1,limit=10}= req.query;
 
   const query =[];
   const matchStage={};
@@ -94,7 +94,10 @@ export const getJobPost = asyncHandler(async (req, res) => {
   }
 
   let resdata = {};
-  resdata = { job: findPost };
+  resdata = { job: findPost[0] };
+
+
+  resdata.job.User_info=  resdata.job.User_info.slice((page-1)*limit ,limit);
 
   const companyData = await providerModal.findOne(
     { company_id: findPost.provider_details },
