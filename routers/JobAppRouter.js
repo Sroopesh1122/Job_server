@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authProviderMiddleware } from "../middlewares/AuthHandler.js";
+import { authProviderMiddleware, waitMiddleware } from "../middlewares/AuthHandler.js";
 import {
   createJobPost,
   deleteJobPost,
@@ -14,7 +14,7 @@ export const JobAppRouter = Router();
 JobAppRouter.post("/create", authProviderMiddleware, createJobPost);
 JobAppRouter.delete("/:id", authProviderMiddleware, deleteJobPost);
 JobAppRouter.get("/category", getAllCategoriesAndSubCategories);
-JobAppRouter.get("/:id", getJobPost);
+JobAppRouter.get("/:id", waitMiddleware,getJobPost);
 
 //remove it later 
 JobAppRouter.get("/sample/jobs", async (req, res) => {

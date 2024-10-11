@@ -2,7 +2,7 @@ import  express from 'express'
 import cors from 'cors'
 import {errorHandler, notFound} from './middlewares/errorHandler.js';
 import { DBConnection } from  './config/DBConfig.js';
-
+import morgan from 'morgan';
 import dotenv from 'dotenv'
 import { UserRouter } from './routers/UserRouter.js';
 import { qulificationRouter } from './routers/QualificationRouter.js';
@@ -17,6 +17,7 @@ dotenv.config()
 const app =  express();
 app.use(cors());
 app.use(express.json());
+app.use(morgan("dev"));
 
 
 DBConnection()

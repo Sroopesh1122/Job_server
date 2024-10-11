@@ -172,7 +172,6 @@ export const skills =
     { "label": "MySQL", "value": "MySQL" },
     { "label": "PostgreSQL", "value": "PostgreSQL" },
     { "label": "SQL Server", "value": "SQL Server" },
-    { "label": "MongoDB", "value": "MongoDB" },
     { "label": "Oracle", "value": "Oracle" },
     { "label": "Database Design", "value": "Database Design" },
     { "label": "Query Optimization", "value": "Query Optimization" },

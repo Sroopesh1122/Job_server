@@ -4,4 +4,4 @@ import { getAllSkills } from "../controllers/SkillsController.js";
 export const skillsRouter = Router();
 
 
-skillsRouter.get("/",getAllSkills)
+skillsRouter.get("/",getAllSkills) 

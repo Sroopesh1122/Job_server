@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { addJobPost, addprojectPost,  followCompany,  forgotPasswordHandler, getUser, getUserById, passwordResetHandler, signin, signup, unfollowCompany, updateUser } from "../controllers/UserController.js";
-import {  authUserMiddleware } from "../middlewares/AuthHandler.js";
+import { addJobPost, addprojectPost,  followCompany,  forgotPasswordHandler, getUser, getUserById, passwordResetHandler, saveJobApplication, signin, signup, unfollowCompany, unSaveJobApplication, updateUser } from "../controllers/UserController.js";
+import {  authUserMiddleware, waitMiddleware } from "../middlewares/AuthHandler.js";
 
 
 export const UserRouter = Router();
@@ -16,6 +16,8 @@ UserRouter.post("/reset-password/:token",passwordResetHandler);
 UserRouter.get("/profile",authUserMiddleware,getUser);
 UserRouter.get("/:id",getUserById)
 UserRouter.post("/job/apply",authUserMiddleware,addJobPost);
+UserRouter.post("/job/save",authUserMiddleware,saveJobApplication);
+UserRouter.post("/job/unsave",authUserMiddleware,unSaveJobApplication);
 UserRouter.post("/project",authUserMiddleware,addprojectPost)
-UserRouter.post("/company/follow",authUserMiddleware,followCompany)
-UserRouter.post("/company/unfollow",authUserMiddleware,unfollowCompany)
+UserRouter.post("/company/follow",authUserMiddleware,waitMiddleware,followCompany)
+UserRouter.post("/company/unfollow",authUserMiddleware,waitMiddleware,unfollowCompany)

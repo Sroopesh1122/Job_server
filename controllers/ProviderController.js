@@ -149,8 +149,6 @@ export const providerGetProfile= asyncHandler(async(req,res)=>{
 export const getProviderProfileById= asyncHandler(async(req,res)=>{
   const {id} = req.params;
 
-  console.log(id)
-
   const query =[];
 
   const matchStage = {};
@@ -174,9 +172,7 @@ export const getProviderProfileById= asyncHandler(async(req,res)=>{
   {
     throw new Error("Account Not found");
   }
-  // setTimeout(()=>{
     return res.json({accountData : findAccount[0]});
-  // },8000)
 })
 
 export const getAllProviders= asyncHandler(async(req,res)=>{

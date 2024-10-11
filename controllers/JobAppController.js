@@ -10,9 +10,13 @@ export const createJobPost = asyncHandler(async (req, res) => {
     vacancy,
     salary,
     location,
-    job_category,
-    job_subcategory,
+    experience,
+    specification,
     qualification,
+    must_skills,
+    other_skills,
+    postedBy,
+    job_role,
     type,
   } = req.body;
   const { _id, company_id } = req.user;
@@ -26,14 +30,15 @@ export const createJobPost = asyncHandler(async (req, res) => {
     !qualification ||
     !vacancy ||
     !location ||
-    !job_category ||
-    !job_subcategory ||
+    !experience ||
+    !must_skills ||
+    !specification ||
+    !job_role ||
     !type
   ) {
     throw new Error("All Fields Required!");
   }
 
-  console.log(company_id);
 
   const data = {
     title,
@@ -41,8 +46,12 @@ export const createJobPost = asyncHandler(async (req, res) => {
     vacancy,
     package: salary,
     location,
-    job_category,
-    job_subcategory,
+    specification,
+    experience,
+    must_skills,
+    other_skills,
+    postedBy,
+    job_role,
     qualification,
     type,
     provider_details: company_id,
@@ -89,7 +98,8 @@ export const getJobPost = asyncHandler(async (req, res) => {
   }
 
   const findPost = await jobApplicationModal.aggregate(query);
-  if (!findPost) {
+  if (!findPost[0]) {
+    // res.status(404)
     throw new Error("Post not found");
   }
 
@@ -97,10 +107,13 @@ export const getJobPost = asyncHandler(async (req, res) => {
   resdata = { job: findPost[0] };
 
 
+ if(applied_details)
+ {
   resdata.job.User_info=  resdata.job.User_info.slice((page-1)*limit ,limit);
+ }
 
   const companyData = await providerModal.findOne(
-    { company_id: findPost.provider_details },
+    { company_id: findPost[0].provider_details },
     { auth_details: 0 }
   );
   if (companyData) {
@@ -120,12 +133,15 @@ export const getAllJobPost = asyncHandler(async (req, res) => {
     salary, //need to be done
     userId, // salary range or exact salary
     location, // array of locations
-    job_category, // category
-    job_subcategory, // subcategory
+    job_role, // role
+    specification, //specification 
     type, // Full Time, Part Time, etc.
     provider_details, // provider's ID
     page = 1, // pagination - current page
     limit = 10, // pagination - limit per page
+    skills,
+    minSalary,
+    maxSalary
   } = req.query;
 
   if (userId) {
@@ -156,19 +172,40 @@ export const getAllJobPost = asyncHandler(async (req, res) => {
     matchStage.location = { $regex: ls.join("|"), $options: "i" };
   }
 
-  // Handle job_category filtering (exact match)
-  if (job_category) {
-    matchStage.job_category = { $regex: job_category, $options: "i" };
+  // Handle job_role filtering (exact match)
+  if (job_role) {
+    matchStage.job_role = { $regex: job_role, $options: "i" };
   }
 
   // Handle job_subcategory filtering (exact match)
-  if (job_subcategory) {
-    matchStage.job_subcategory = { $regex: job_subcategory, $options: "i" };
+  if (specification) {
+    matchStage.job_specification = { $regex: specification.join("|"), $options: "i" };
   }
 
+  if(skills)
+  {
+    const s = skills.split(",")
+    console.log(skills)
+    matchStage.$or = [
+      { must_skills: { $regex: s.join("|"), $options: "i" } },
+      { other_skills: { $regex: s.join("|"), $options: "i" } }
+    ];
+  }
+  if (minSalary && maxSalary) {
+    // Handle both min and max salary range
+    matchStage["package.min"] = { $gte: parseInt(minSalary) };
+    matchStage["package.max"] = { $lte: parseInt(maxSalary) };
+  } else if (minSalary) {
+    // Handle only min salary case
+    matchStage["package.min"] = { $gte: parseInt(minSalary) };
+  } else if (maxSalary) {
+    // Handle only max salary case
+    matchStage["package.max"] = { $lte: parseInt(maxSalary) };
+  }
   // Handle type filtering (Full Time, Part Time, etc.)
   if (type) {
-    matchStage.type = { $regex: type, $options: "i" }; // Exact match as it's enum
+    const mode = type.split(",");
+    matchStage.type = { $regex: mode.join("|"), $options: "i" }; // Exact match as it's enum
   }
 
   // Handle provider_details filtering (exact match)
@@ -205,13 +242,14 @@ export const getAllJobPost = asyncHandler(async (req, res) => {
   });
 
   const skip = (page - 1) * limit;
+
+  const results = await jobApplicationModal.aggregate(query)
    
   query.push({ $skip: parseInt(skip) });
   query.push({ $limit: parseInt(limit)});
 
-  const results = await jobApplicationModal.aggregate(query);
-
-  res.json(results);
+  const pageData = await jobApplicationModal.aggregate(query);
+  setTimeout(async()=>{res.json({searchdatas: results.length, pageData});},5000)
 });
 
 ` `

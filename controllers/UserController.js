@@ -257,6 +257,9 @@ export const followCompany = asyncHandler(async(req,res)=>{
   }
 
   company.followers.push(user_id);
+  const user = await userModal.findOne({user_id:user_id})
+  user.follwing.push(company.company_id);
+  await user.save()
   await company.save();
   return res.json({"success":true})
 })
@@ -282,9 +285,49 @@ export const unfollowCompany = asyncHandler(async(req,res)=>{
     }
   
   company.followers =  company.followers.filter((id)=>id !== user_id);
+  const user = await userModal.findOne({user_id:user_id});
+  user.follwing = user.follwing.filter((id)=>id !== companyId);
+  await user.save();
   await company.save();
   return res.json({"success":true})
 })
 
+
+export const saveJobApplication = asyncHandler(async(req,res)=>{
+  const {jobId} = req.body;
+  const {user_id} = req.user;
+
+  if(!jobId)
+  {
+    throw new Error("Job Id required!!")
+  }
+
+  const user = await userModal.findOne({user_id:user_id})
+  user.saved_info.jobs.push(jobId);
+  const application = await jobApplicationModal.findOne({job_id :jobId});
+  application.saved_ids.push(user_id);
+  await application.save(); 
+  await user.save();
+
+  return res.json({"success":true})
+})
+
+export const unSaveJobApplication = asyncHandler(async(req,res)=>{
+  const {jobId} = req.body;
+  const {user_id} = req.user;
+
+  if(!jobId)
+  {
+    throw new Error("Job Id required!!")
+  }
+
+  const user = await userModal.findOne({user_id:user_id})
+  user.saved_info.jobs = user.saved_info.jobs?.filter((id)=>id !== jobId);
+  const application = await jobApplicationModal.findOne({job_id :jobId});
+  application.saved_ids= application.saved_ids.filter((id)=>id!== user_id);
+  await application.save();
+  await user.save();
+  return res.json({"success":true})
+})
 
 

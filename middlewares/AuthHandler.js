@@ -54,3 +54,9 @@ export const isAdmin = asyncHandler(async (req, res, next) => {
 });
 
 
+export const waitMiddleware = asyncHandler(async (req,res,next)=>{
+  setTimeout(()=>{
+    next()
+  },5000)
+})
+

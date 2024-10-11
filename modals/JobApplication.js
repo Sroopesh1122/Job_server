@@ -14,8 +14,8 @@ const applicationSchema = new mongoose.Schema({
     trim: true,
   },
   job_id: {
-    type: String, 
-    unique: true, 
+    type: String,
+    unique: true,
   },
   vacancy: {
     type: Number,
@@ -26,49 +26,54 @@ const applicationSchema = new mongoose.Schema({
       message: (props) => `${props.value} is not a valid vacancy number!`,
     },
   },
-  experience:{
-   type:Number,
-   validate: {
-    validator: function (v) {
-      return v > 0;
+  experience: {
+    min: {
+      type: Number,
+      required: true,
     },
-    message: (props) => `${props.value} is not a valid vacancy number!`,
-  },
+    max: {
+      type: Number,
+      required: true,
+    },
   },
   package: {
-    type: String,
+    min: { type: Number },
+    max: { type: Number },
+    disclosed: {
+      type: Boolean,
+      default: true, // Default is true, indicating the package is disclosed
+    },
   },
-  packageMin: {type: Number },  
-  packageMax: {type: Number },
   location: [{
-    type: String, 
+    type: String,
   }],
-  qualification:[ {
+  qualification: [{
     type: String,
   }],
   specification: [{
     type: String,
   }],
-  must_skills:[{type:String}],
-  other_skills:[{type:String}],
+  must_skills: [{ type: String }],
+  other_skills: [{ type: String }],
   type: {
     type: String,
     enum: ['Full Time', 'Part Time', 'Hybrid', 'Remote'],
     default: 'Full Time',
   },
   provider_details: {
-    type: String  
+    type: String,
   },
   applied_ids: [{
-    userId : {type: String},
-    status :  {type:String}
+    userId: { type: String },
+    status: { type: String }
   }],
-  postedBy:{
-    type:String,
-    default:"admin"
+  saved_ids: [{ type: String }],
+  postedBy: {
+    type: String,
+    default: "admin"
   },
-  job_role:{
-    type:String
+  job_role: {
+    type: String
   }
 }, {
   timestamps: true,
@@ -100,10 +105,6 @@ applicationSchema.pre("save", async function (next) {
       return next(new Error('Failed to generate a unique job ID after several attempts.'));
     }
   }
-
-    const { min, max } = parsePackage(this.package);
-    this.packageMin = min;
-    this.packageMax = max;
     next();
 });
 

@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { getRandomIds } from "../utils/generateRandomIds.js";
+import { type } from "os";
 
 const userSchema = new mongoose.Schema(
   {
@@ -118,8 +119,9 @@ const userSchema = new mongoose.Schema(
         },
       },
     ],
-
-    
+    saved_info:{
+      jobs:[{type:String}]
+    },
     application_applied_info: {
       jobs: [
         {
@@ -134,6 +136,7 @@ const userSchema = new mongoose.Schema(
         },
       ],
     },
+    follwing:[{type:String}]
   },
   { timestamps: true }
 );
