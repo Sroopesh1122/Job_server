@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { getRandomIds } from "../utils/generateRandomIds.js";
 import { parsePackage } from "../utils/commonUtils.js";
 
+
 const applicationSchema = new mongoose.Schema({
   title: {
     type: String,
