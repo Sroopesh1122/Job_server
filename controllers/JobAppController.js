@@ -109,7 +109,7 @@ export const getJobPost = asyncHandler(async (req, res) => {
 
  if(applied_details)
  {
-  resdata.job.User_info=  resdata.job.User_info.slice((page-1)*limit ,limit);
+  resdata.job.User_info=  resdata.job.User_info.slice((page-1)*limit ,page* limit);
  }
 
   const companyData = await providerModal.findOne(
