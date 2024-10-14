@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { getRandomIds } from "../utils/generateRandomIds.js";
 import { type } from "os";
+import { url } from "inspector";
 
 const userSchema = new mongoose.Schema(
   {
@@ -25,8 +26,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       validate: {
         validator: function (v) {
-          return /^\d{10}$/.test(v);
-        },
+          return /^\d{10}$/.test(v);},
         message: (props) => `${props.value} is not a valid mobile number!`,
       },
     },
@@ -72,6 +72,10 @@ const userSchema = new mongoose.Schema(
           type: String,
         },
       ],
+      resume:{
+        url:{type:String,default:null},
+        fileName: {type:String,default:null}
+      }
     },
     education_details: {
       qualification: {

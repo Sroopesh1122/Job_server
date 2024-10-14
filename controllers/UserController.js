@@ -67,8 +67,6 @@ export const signin = asyncHandler(async (req, res) => {
 
 export const updateUser = asyncHandler(async (req, res) => {
   const { _id } = req.user;
-
-  console.log(req.body)
   try {
     const user = await userModal.findByIdAndUpdate(_id, req.body ,{new:true});
     if (user) {
