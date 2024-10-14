@@ -247,6 +247,7 @@ export const getAllJobPost = asyncHandler(async (req, res) => {
    
   query.push({ $skip: parseInt(skip) });
   query.push({ $limit: parseInt(limit)});
+  
 
   const pageData = await jobApplicationModal.aggregate(query);
   setTimeout(async()=>{res.json({searchdatas: results.length, pageData});},5000)

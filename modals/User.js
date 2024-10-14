@@ -50,10 +50,10 @@ const userSchema = new mongoose.Schema(
       },
     },
     profile_details: {
-      qualification: {
-        type: String,
-        default: null,
-      },
+      // qualification: {
+      //   type: String,
+      //   default: null,
+      // },
       summary: {
         type: String,
         default: null,
@@ -65,7 +65,7 @@ const userSchema = new mongoose.Schema(
       },
       gender: {
         type: String,
-        enum: ["male", "female", "transgender"],
+        enum: ["Male", "Female", "Transgender","male","MALE","female","FEMALE","transgender"],
       },
       skills: [
         {

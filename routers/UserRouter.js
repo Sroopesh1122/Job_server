@@ -15,9 +15,9 @@ UserRouter.post("/forgot-password",forgotPasswordHandler);
 UserRouter.post("/reset-password/:token",passwordResetHandler);
 UserRouter.get("/profile",authUserMiddleware,getUser);
 UserRouter.get("/:id",getUserById)
-UserRouter.post("/job/apply",authUserMiddleware,addJobPost);
-UserRouter.post("/job/save",authUserMiddleware,saveJobApplication);
-UserRouter.post("/job/unsave",authUserMiddleware,unSaveJobApplication);
+UserRouter.post("/job/apply",authUserMiddleware,waitMiddleware,addJobPost);
+UserRouter.post("/job/save",authUserMiddleware,waitMiddleware,saveJobApplication);
+UserRouter.post("/job/unsave",authUserMiddleware,waitMiddleware,unSaveJobApplication);
 UserRouter.post("/project",authUserMiddleware,addprojectPost)
 UserRouter.post("/company/follow",authUserMiddleware,waitMiddleware,followCompany)
 UserRouter.post("/company/unfollow",authUserMiddleware,waitMiddleware,unfollowCompany)

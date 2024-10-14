@@ -27,6 +27,7 @@ export const deleteUploadImg = asyncHandler(async(req,res)=>{
     const {id} = req.body;
     if(id)
     {
+        console.log(id)
         try {
             const result = await cloudinaryConfiguration.uploader.destroy(id);
             res.json({status:true,result});
