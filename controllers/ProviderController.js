@@ -217,6 +217,35 @@ export const getAllProviders = asyncHandler(async (req, res) => {
   res.json({ totalDatas: totalResults, pageData: results });
 });
 
+export const getCompanyTitles = asyncHandler(async (req, res) => {
+  const { q } = req.params;
+
+
+  console.log(q)
+
+  const query = [];
+  const matchStage = {};
+
+  if (q && q !== "") {
+    matchStage.company_name = { $regex: `.*${q.trim()}.*`, $options: "i" };
+  }
+
+  query.push({ $match: matchStage });
+
+  query.push({
+    $project: {
+      company_name: 1,
+    },
+  });
+
+  // Duplicate query array for total count
+  const totalResultsQuery = [...query];
+
+  // Get total number of results
+  const totalResultsData = await providerModal.aggregate(totalResultsQuery);
+  res.json(totalResultsData)
+});
+
 export const changeJobApplicationStatus = asyncHandler(async(req,res)=>{
 
   const {_id ,company_id} = req.user;

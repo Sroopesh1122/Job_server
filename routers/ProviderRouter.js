@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   changeJobApplicationStatus,
   getAllProviders,
+  getCompanyTitles,
   getProviderProfileById,
   ProviderForgotPasswordHandler,
   providerGetProfile,
@@ -26,5 +27,6 @@ providerRouter.post("/forgot-password", ProviderForgotPasswordHandler);
 providerRouter.post("/reset-password", ProviderPasswordResetHandler);
 providerRouter.get("/profile", authProviderMiddleware, providerGetProfile);
 providerRouter.get("/allcompany",waitMiddleware,getAllProviders)
+providerRouter.get("/searchCompany/:q",waitMiddleware , getCompanyTitles)
 providerRouter.get("/:id", waitMiddleware, getProviderProfileById);
 
