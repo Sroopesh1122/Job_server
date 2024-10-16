@@ -128,17 +128,17 @@ export const getAllJobPost = asyncHandler(async (req, res) => {
   let query = [];
 
   const {
-    qualification, // qualification filter
-    q, // search text
-    salary, //need to be done
-    userId, // salary range or exact salary
-    location, // array of locations
-    job_role, // role
-    specification, //specification 
-    type, // Full Time, Part Time, etc.
-    provider_details, // provider's ID
-    page = 1, // pagination - current page
-    limit = 10, // pagination - limit per page
+    qualification,
+    q, 
+    salary, 
+    userId, 
+    location, 
+    job_role, 
+    specification,
+    type,
+    provider_details, 
+    page = 1, 
+    limit = 10, 
     skills,
     minSalary,
     maxSalary
@@ -253,7 +253,7 @@ export const getAllJobPost = asyncHandler(async (req, res) => {
   setTimeout(async()=>{res.json({searchdatas: results.length, pageData});},5000)
 });
 
-` `
+
 
 export const deleteJobPost = asyncHandler(async (req, res) => {
   const { _id } = req.user;
@@ -274,4 +274,104 @@ export const deleteJobPost = asyncHandler(async (req, res) => {
 
 export const getAllCategoriesAndSubCategories = asyncHandler((req, res) => {
   res.json(jobCategories);
+});
+
+
+
+export const getSuggestedJobs = asyncHandler(async (req, res) => {
+  let query = [];
+
+  const {
+    qualification, 
+    location,
+    job_role, 
+    type, 
+    page = 1, 
+    limit = 10, 
+    skills,
+  } = req.query;
+
+  const matchStage = {};
+  
+  matchStage.$or = [];
+
+  // Handle qualification filtering with case insensitivity
+  if (qualification) {
+    const qs = qualification.split(",");
+    matchStage.$or.push({qualification: { $regex: qs.join("|"), $options: "i" }});
+  }
+
+  // Handle location filtering (exact match)
+  if (location) {
+    const ls = location.split(",");
+    matchStage.$or.push({location: { $regex: ls.join("|"), $options: "i" }});
+  }
+
+  // Handle job_role filtering (case insensitive match)
+  if (job_role) {
+    matchStage.$or.push({job_role: { $regex: job_role, $options: "i" }});
+  }
+
+  // Handle skills filtering (must_skills or other_skills)
+  if (skills) {
+    const s = skills.split(",");
+    matchStage.$or.push({ must_skills: { $regex: s.join("|"), $options: "i" }});
+    matchStage.$or.push({ other_skills: { $regex: s.join("|"), $options: "i" }});
+  }
+
+  // Handle type filtering (Full Time, Part Time, etc.)
+  if (type) {
+    const mode = type.split(",");
+    matchStage.$or.push({ type: { $regex: mode.join("|"), $options: "i" }});
+  }
+
+  // Add the match stage to the query pipeline
+  query.push({ $match: matchStage });
+
+  // Add the lookup stage to join with the providers collection
+  query.push({
+    $lookup: {
+      from: "providers",
+      localField: "provider_details",
+      foreignField: "company_id", // Adjust based on your actual field name in the providers collection
+      as: "provider_info",
+    },
+  });
+
+  // Unwind the provider_info array if you want a flat structure
+  query.push({ $unwind: { path: "$provider_info", preserveNullAndEmptyArrays: true } });
+
+  // Project fields and exclude unnecessary ones
+  query.push({
+    $project: {
+      provider_info: {
+        auth_details: 0, 
+      },
+    },
+  });
+
+  const skip = (page - 1) * limit;
+
+  // Add pagination stages (skip and limit) before querying
+  query.push({ $skip: parseInt(skip) });
+  query.push({ $limit: parseInt(limit) });
+
+  // Fetch paginated results and total count in a single query
+  const results = await jobApplicationModal.aggregate([
+    ...query,
+    {
+      $facet: {
+        totalCount: [{ $count: "count" }],
+        jobs: query, // Paginated jobs data
+      },
+    },
+  ]);
+
+  const totalResults = results[0]?.totalCount[0]?.count || 0;
+  const pageData = results[0].jobs;
+
+  res.json({
+    totalResults,
+    pageData,
+  });
 });

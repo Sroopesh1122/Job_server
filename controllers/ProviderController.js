@@ -175,12 +175,47 @@ export const getProviderProfileById= asyncHandler(async(req,res)=>{
     return res.json({accountData : findAccount[0]});
 })
 
-export const getAllProviders= asyncHandler(async(req,res)=>{
-  const {limit} = req.query;
+export const getAllProviders = asyncHandler(async (req, res) => {
+  const { limit = 10, page = 1, q } = req.query;
 
-  const findAccounts = await providerModal.find({},{"auth_details":0}).limit(parseInt(limit));
-  return res.json(findAccounts);
-})
+  const query = [];
+  const matchStage = {};
+
+  if (q && q !== "") {
+    matchStage.company_name = { $regex: `.*${q.trim()}.*`, $options: "i" };
+  }
+
+  // Match stage
+  query.push({ $match: matchStage });
+
+  // Project stage: Exclude auth_details
+  query.push({
+    $project: {
+      auth_details: 0,
+    },
+  });
+
+  // Duplicate query array for total count
+  const totalResultsQuery = [...query];
+
+  // Add $count for total results count
+  totalResultsQuery.push({
+    $count: "totalResults",
+  });
+
+  // Get total number of results
+  const totalResultsData = await providerModal.aggregate(totalResultsQuery);
+  const totalResults = totalResultsData.length > 0 ? totalResultsData[0].totalResults : 0;
+
+  // Pagination
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+  query.push({ $skip: parseInt(skip) });
+  query.push({ $limit: parseInt(limit) });
+
+  // Fetch paginated results
+  const results = await providerModal.aggregate(query);
+  res.json({ totalDatas: totalResults, pageData: results });
+});
 
 export const changeJobApplicationStatus = asyncHandler(async(req,res)=>{
 

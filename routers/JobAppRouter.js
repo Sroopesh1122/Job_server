@@ -6,15 +6,19 @@ import {
   getAllCategoriesAndSubCategories,
   getAllJobPost,
   getJobPost,
+  getSuggestedJobs,
 } from "../controllers/JobAppController.js";
 import { postData } from "../assets/dummyData.js";
 
 export const JobAppRouter = Router();
 
+
 JobAppRouter.post("/create", authProviderMiddleware, createJobPost);
 JobAppRouter.delete("/:id", authProviderMiddleware, deleteJobPost);
 JobAppRouter.get("/category", getAllCategoriesAndSubCategories);
+JobAppRouter.get("/suggestion",getSuggestedJobs);
 JobAppRouter.get("/:id", waitMiddleware,getJobPost);
+
 
 //remove it later 
 JobAppRouter.get("/sample/jobs", async (req, res) => {

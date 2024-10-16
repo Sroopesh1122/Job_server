@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+import { getRandomIds } from "../utils/generateRandomIds.js";
 
 const providerSchema = new mongoose.Schema(
   {
@@ -74,7 +75,7 @@ const providerSchema = new mongoose.Schema(
       projects: [
         {
           projectId: { type: String},
-        },
+        }
       ],
     },
     followers:[{
