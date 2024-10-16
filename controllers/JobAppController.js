@@ -72,7 +72,7 @@ export const createJobPost = asyncHandler(async (req, res) => {
 
 export const getJobPost = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const {applied_details,page=1,limit=10}= req.query;
+  const {applied_details,page=1,limit=10,similar_jobs=false ,similar_jobs_provider_info=true}= req.query;
 
   const query =[];
   const matchStage={};
@@ -116,9 +116,82 @@ export const getJobPost = asyncHandler(async (req, res) => {
     { company_id: findPost[0].provider_details },
     { auth_details: 0 }
   );
+
+
   if (companyData) {
     resdata = { ...resdata, company: companyData };
   }
+
+
+  if(similar_jobs)
+  {
+    const query_similar = []
+    const matchStage = {};
+  
+    matchStage.$or = [];
+  
+    // Handle qualification filtering with case insensitivity
+    if (resdata?.job?.specification) {
+      matchStage.$or.push({specification: { $regex: resdata?.job?.specification?.join("|"), $options: "i" }});
+    }
+  
+    // Handle job_role filtering (case insensitive match)
+    if (resdata?.job?.job_role) {
+      matchStage.$or.push({job_role: { $regex: resdata?.job?.job_role, $options: "i" }});
+    }
+  
+    // Handle skills filtering (must_skills or other_skills)
+    if (resdata?.job?.must_skills || resdata?.job?.other_skills) {
+      const s = [...resdata?.job?.must_skills , ...resdata?.job?.other_skills]
+      matchStage.$or.push({ must_skills: { $regex: s.join("|"), $options: "i" }});
+      matchStage.$or.push({ other_skills: { $regex: s.join("|"), $options: "i" }});
+    }
+  
+  
+    query_similar.push({ $match: matchStage });
+  
+   if(similar_jobs_provider_info)
+   {
+     // Add the lookup stage to join with the providers collection
+     query_similar .push({
+      $lookup: {
+        from: "providers",
+        localField: "provider_details",
+        foreignField: "company_id", // Adjust based on your actual field name in the providers collection
+        as: "provider_info",
+      },
+    });
+  
+    // Unwind the provider_info array if you want a flat structure
+    query_similar.push({ $unwind: { path: "$provider_info", preserveNullAndEmptyArrays: true } });
+  
+    // Project fields and exclude unnecessary ones
+    query_similar.push({
+      $project: {
+        provider_info: {
+          auth_details: 0, 
+        },
+      },
+    });
+   }
+   query_similar.push({ $limit: 10});
+  
+   const results = await jobApplicationModal.aggregate([
+      ...query_similar,
+      {
+        $facet: {
+          totalCount: [{ $count: "count" }],
+          jobs: query_similar, // Paginated jobs data
+        },
+      },
+    ]);
+  
+    const pageData = results[0].jobs;
+    const removedSearchJOb = pageData?.filter((pdata)=>pdata?.job_id !== resdata?.job?.job_id)
+    resdata= {...resdata , similarData : removedSearchJOb || [] , similar_data_count:removedSearchJOb?.length || 0}
+  }
+
+
 
   res.json(resdata);
 });
@@ -281,14 +354,13 @@ export const getAllCategoriesAndSubCategories = asyncHandler((req, res) => {
 export const getSuggestedJobs = asyncHandler(async (req, res) => {
   let query = [];
 
-  const {
-    qualification, 
-    location,
+  const { 
     job_role, 
-    type, 
+    specification,
     page = 1, 
     limit = 10, 
     skills,
+    provider_info =false
   } = req.query;
 
   const matchStage = {};
@@ -296,15 +368,9 @@ export const getSuggestedJobs = asyncHandler(async (req, res) => {
   matchStage.$or = [];
 
   // Handle qualification filtering with case insensitivity
-  if (qualification) {
-    const qs = qualification.split(",");
-    matchStage.$or.push({qualification: { $regex: qs.join("|"), $options: "i" }});
-  }
-
-  // Handle location filtering (exact match)
-  if (location) {
-    const ls = location.split(",");
-    matchStage.$or.push({location: { $regex: ls.join("|"), $options: "i" }});
+  if (specification) {
+    const sp = specification.split(",");
+    matchStage.$or.push({specification: { $regex: sp.join("|"), $options: "i" }});
   }
 
   // Handle job_role filtering (case insensitive match)
@@ -319,17 +385,13 @@ export const getSuggestedJobs = asyncHandler(async (req, res) => {
     matchStage.$or.push({ other_skills: { $regex: s.join("|"), $options: "i" }});
   }
 
-  // Handle type filtering (Full Time, Part Time, etc.)
-  if (type) {
-    const mode = type.split(",");
-    matchStage.$or.push({ type: { $regex: mode.join("|"), $options: "i" }});
-  }
 
-  // Add the match stage to the query pipeline
   query.push({ $match: matchStage });
 
-  // Add the lookup stage to join with the providers collection
-  query.push({
+ if(provider_info)
+ {
+   // Add the lookup stage to join with the providers collection
+   query.push({
     $lookup: {
       from: "providers",
       localField: "provider_details",
@@ -349,6 +411,7 @@ export const getSuggestedJobs = asyncHandler(async (req, res) => {
       },
     },
   });
+ }
 
   const skip = (page - 1) * limit;
 
