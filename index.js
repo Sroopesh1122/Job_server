@@ -11,6 +11,7 @@ import { JobAppRouter } from "./routers/JobAppRouter.js";
 import { ProjectAppRouter } from "./routers/ProjectAppRouter.js";
 import { skillsRouter } from "./routers/SkillsRouter.js";
 import { UploaderRouter } from "./routers/UPloadRouters.js";
+import { LocationRouter } from './routers/LocationRouter.js'
 import path from "path";
 
 import { fileURLToPath } from "url";
@@ -34,6 +35,7 @@ app.use("/provider", providerRouter);
 app.use("/qualifications", qulificationRouter);
 app.use("/skills", skillsRouter);
 app.use("/jobs", JobAppRouter);
+app.use("/locations", LocationRouter);
 app.use("/projects", ProjectAppRouter);
 app.use("/uploader", UploaderRouter);
 
