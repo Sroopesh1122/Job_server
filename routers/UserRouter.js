@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { addJobPost, addprojectPost,  followCompany,  forgotPasswordHandler, getUser, getUserById, passwordResetHandler, saveJobApplication, signin, signup, unfollowCompany, unSaveJobApplication, updateUser } from "../controllers/UserController.js";
+import { addJobPost, addprojectPost,  followCompany,  forgotPasswordHandler, getAppliedApplication, getSavedApplication, getUser, getUserById, passwordResetHandler, saveJobApplication, signin, signup, unfollowCompany, unSaveJobApplication, updateUser } from "../controllers/UserController.js";
 import {  authUserMiddleware, waitMiddleware } from "../middlewares/AuthHandler.js";
 
 
@@ -13,10 +13,12 @@ UserRouter.post("/login",signin)
 UserRouter.put("/update",authUserMiddleware,updateUser)
 UserRouter.post("/forgot-password",forgotPasswordHandler);
 UserRouter.post("/reset-password/:token",passwordResetHandler);
-UserRouter.get("/profile",authUserMiddleware,getUser);
+UserRouter.get("/profile",authUserMiddleware,waitMiddleware,getUser);
 UserRouter.get("/:id",getUserById)
 UserRouter.post("/job/apply",authUserMiddleware,waitMiddleware,addJobPost);
 UserRouter.post("/job/save",authUserMiddleware,waitMiddleware,saveJobApplication);
+UserRouter.get("/job/saved-list",authUserMiddleware,waitMiddleware,getSavedApplication)
+UserRouter.get("/job/applied-list",authUserMiddleware,waitMiddleware,getAppliedApplication)
 UserRouter.post("/job/unsave",authUserMiddleware,waitMiddleware,unSaveJobApplication);
 UserRouter.post("/project",authUserMiddleware,addprojectPost)
 UserRouter.post("/company/follow",authUserMiddleware,waitMiddleware,followCompany)
