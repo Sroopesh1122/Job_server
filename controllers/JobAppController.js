@@ -2,6 +2,7 @@ import asyncHandler from "express-async-handler";
 import { jobApplicationModal } from "../modals/JobApplication.js";
 import { providerModal } from "../modals/JobProvider.js";
 import { jobCategories } from "../assets/Jobs.js";
+import { query } from "express";
 
 export const createJobPost = asyncHandler(async (req, res) => {
   const {
@@ -437,4 +438,76 @@ export const getSuggestedJobs = asyncHandler(async (req, res) => {
     totalResults,
     pageData,
   });
+});
+
+
+
+export const updateApplicationStatus = asyncHandler(async (req, res) => {
+  const { applicationId, status, user_Id } = req.body;
+
+
+  const ApllicationStatusDefault = ["Applied","Application Viewed","Profile Viewed","Contact Viewed","Resume Viewed","Interested"]
+
+  if (!applicationId || !status || !user_Id) {
+    throw new Error("All fields are required");
+  }
+
+  // Match the application based on job_id and applied_ids.userId
+  const matchStage = {
+    job_id: applicationId,
+    "applied_ids.userId": user_Id,
+  };
+
+
+  const application = await jobApplicationModal.findOne(matchStage);
+
+  if (!application) {
+    throw new Error("Application Not Found")
+  }
+
+  if(ApllicationStatusDefault?.find((defaultSatuts)=>defaultSatuts === status))
+  {
+    application.applied_ids = application?.applied_ids?.map((appData)=>{
+      if(appData?.userId === user_Id)
+      {
+  
+        if(!appData?.status?.find((appStatus)=>appStatus.toLowerCase() === status.toLowerCase()))
+        {
+          appData.status?.push(status)
+        }
+      }
+      return appData
+    })
+  }
+
+
+  await application.save()
+  return res.json({success:true,"message":"status changed"})
+});
+
+export const getApplicationStatus = asyncHandler(async (req, res) => {
+  const { applicationId, user_Id } = req.body;
+
+  if (!applicationId || !user_Id) {
+    throw new Error("All fields are required");
+  }
+
+  // Match the application based on job_id and applied_ids.userId
+  const matchStage = {
+    job_id: applicationId,
+  };
+
+
+  const application = await jobApplicationModal.findOne(matchStage);
+
+  if (!application) {
+    throw new Error("Application Not Found")
+  }
+
+  const applicationSatuts = application.applied_ids.find((appData)=>appData.userId === user_Id)
+  if(!applicationSatuts)
+    {
+      throw new Error("Applicant not Found")
+    } 
+  return res.json({"applicationStatus":applicationSatuts})
 });

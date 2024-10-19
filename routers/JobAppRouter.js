@@ -5,8 +5,10 @@ import {
   deleteJobPost,
   getAllCategoriesAndSubCategories,
   getAllJobPost,
+  getApplicationStatus,
   getJobPost,
   getSuggestedJobs,
+  updateApplicationStatus,
 } from "../controllers/JobAppController.js";
 import { postData } from "../assets/dummyData.js";
 
@@ -17,8 +19,9 @@ JobAppRouter.post("/create", authProviderMiddleware, createJobPost);
 JobAppRouter.delete("/:id", authProviderMiddleware, deleteJobPost);
 JobAppRouter.get("/category", getAllCategoriesAndSubCategories);
 JobAppRouter.get("/suggestion",getSuggestedJobs);
+JobAppRouter.post("/user/status",waitMiddleware,getApplicationStatus)
+JobAppRouter.put("/status/change",authProviderMiddleware,updateApplicationStatus)
 JobAppRouter.get("/:id", waitMiddleware,getJobPost);
-
 
 //remove it later 
 JobAppRouter.get("/sample/jobs", async (req, res) => {

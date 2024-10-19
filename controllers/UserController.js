@@ -32,7 +32,7 @@ export const signup = asyncHandler(async (req, res) => {
     if (user) {
       res.json({
         user,
-        auth_tokens: await jwt.sign(resdata, process.env.JWT_SECRET_TOKEN),
+        authToken: await jwt.sign(resdata, process.env.JWT_SECRET_TOKEN),
       });
     } else {
       throw new Error("Account Creation Failed");
@@ -488,7 +488,7 @@ export const getAppliedApplication = asyncHandler(async (req, res) => {
   });
 
   return res.json({
-    totalData: savedCount?.saved_info?.jobs?.length,
+    totalData: savedCount?.application_applied_info?.jobs?.length,
     pageData: user?.map((data) => {
       return {
         ...data?._id,

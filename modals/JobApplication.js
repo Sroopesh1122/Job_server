@@ -66,7 +66,7 @@ const applicationSchema = new mongoose.Schema({
   },
   applied_ids: [{
     userId: { type: String },
-    status: { type: String }
+    status: [{ type: String }]
   }],
   saved_ids: [{ type: String }],
   postedBy: {
