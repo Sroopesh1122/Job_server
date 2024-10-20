@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authProviderMiddleware, waitMiddleware } from "../middlewares/AuthHandler.js";
+import { authProviderMiddleware, getProfileMiddleware, waitMiddleware } from "../middlewares/AuthHandler.js";
 import {
   createJobPost,
   deleteJobPost,
@@ -18,7 +18,7 @@ export const JobAppRouter = Router();
 JobAppRouter.post("/create", authProviderMiddleware, createJobPost);
 JobAppRouter.delete("/:id", authProviderMiddleware, deleteJobPost);
 JobAppRouter.get("/category", getAllCategoriesAndSubCategories);
-JobAppRouter.get("/suggestion",getSuggestedJobs);
+JobAppRouter.get("/suggestion",getProfileMiddleware ,getSuggestedJobs);
 JobAppRouter.post("/user/status",waitMiddleware,getApplicationStatus)
 JobAppRouter.put("/status/change",authProviderMiddleware,updateApplicationStatus)
 JobAppRouter.get("/:id", waitMiddleware,getJobPost);
@@ -35,5 +35,5 @@ JobAppRouter.get("/sample/jobs", async (req, res) => {
     res.json({length : postData.length , pageData});
   }, 5000);
 });
-JobAppRouter.get("/", getAllJobPost);
+JobAppRouter.get("/", getProfileMiddleware,getAllJobPost);
 

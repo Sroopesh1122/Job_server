@@ -45,6 +45,20 @@ export const authProviderMiddleware = asyncHandler(async (req, res, next) => {
   }
 });
 
+
+export const getProfileMiddleware = asyncHandler(async (req, res, next) => {
+  let token = null;
+  if (req?.headers?.authorization) {
+    token = req?.headers?.authorization.split(" ")[1];
+    let decoded;
+    decoded = await jwt.verify(token, process.env.JWT_SECRET_TOKEN)
+    const user = await userModal.findOne({user_id : decoded.userId});
+    req.user = user;
+  }
+  next();
+});
+
+
 export const isAdmin = asyncHandler(async (req, res, next) => {
   if (req?.user?.auth_details?.role === "admin") {
     next();

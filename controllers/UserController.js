@@ -308,6 +308,9 @@ export const unSaveJobApplication = asyncHandler(async (req, res) => {
   return res.json({ success: true });
 });
 
+
+
+
 export const getSavedApplication = asyncHandler(async (req, res) => {
   const { user_id } = req.user;
   const { page = 1, limit = 10 } = req.query;
@@ -323,12 +326,64 @@ export const getSavedApplication = asyncHandler(async (req, res) => {
   });
 
   query.push({
+    $project:{
+      _id:1,
+      name:1,
+      email:1,
+      saved_info:1
+    }
+  })
+
+  query.push({
+    $unwind:"$saved_info.jobs"
+  })
+
+    query.push({
+    $lookup: {
+      from: "applications",
+      localField: "saved_info.jobs",
+      foreignField: "job_id",
+      as: "Saved_application_info",
+    },
+  });
+
+  query.push({
+    $unwind:"$Saved_application_info"
+  })
+
+  query.push({
+    $group:{
+      _id:"$_id",
+      name:{$first:"$name"},
+      email:{$first:"$email"},
+      saved_info:{$push:"$saved_info.jobs"}
+    }
+  })
+
+  query.push({
+    $project:{
+      _id:1,
+      name:1,
+      email:1,
+      saved_info : {$reverseArray: "$saved_info"}
+    }
+  })
+
+
+  query.push({
     $addFields: {
       pageData: {
-        $slice: ["$saved_info.jobs", skip, parseInt(limit)],
+        $slice: ["$saved_info", skip, parseInt(limit)],
       },
     },
   });
+
+
+  query.push({
+    $unwind:"$pageData"
+  })
+
+
 
   query.push({
     $lookup: {
@@ -342,7 +397,12 @@ export const getSavedApplication = asyncHandler(async (req, res) => {
   query.push({
     $unwind: {
       path: "$Saved_application_info",
-      preserveNullAndEmptyArrays: true, // Ensures jobs without provider info are preserved
+    },
+  });
+
+  query.push({
+    $project: {
+      "Saved_application_info.applied_ids": 0,
     },
   });
 
@@ -358,158 +418,269 @@ export const getSavedApplication = asyncHandler(async (req, res) => {
   query.push({
     $unwind: {
       path: "$company",
-      preserveNullAndEmptyArrays: true, // Ensures jobs without provider info are preserved
     },
   });
 
   query.push({
     $project: {
       "company.auth_details": 0,
-      "saved_app_info.applied_ids": 0,
       "company.job_details": 0,
       "company.project_details": 0,
     },
   });
 
+
   query.push({
-    $group: {
-      _id: { saved_app_info: "$Saved_application_info", company: "$company" },
+    $addFields: {
+      "Saved_application_info.companyData": "$company",
     },
   });
 
-  // Execute the aggregation pipeline
-  const user = await userModal.aggregate(query);
 
-  const savedCount = await userModal.findOne({ user_id: user_id });
-
-  return res.json({
-    totalData: savedCount?.saved_info?.jobs?.length,
-    pageData: user?.map((data) => data?._id),
-  });
-
-  // Check if any data is returned
-  if (user.length === 0 || !user[0]?.Saved_application_info) {
-    return res.json({
-      totalData: 0,
-      data: [],
-    });
-  }
-
-  const totalJobs = user[0]?.saved_info?.jobs?.length || 0;
-
-  // Return the paginated results
-  return res.json({
-    totalData: totalJobs, // Total number of jobs saved by the user
-    data: user[0].Saved_application_info, // The paginated result
-  });
-});
-
-export const getAppliedApplication = asyncHandler(async (req, res) => {
-  const { user_id } = req.user;
-  const { page = 1, limit = 10 } = req.query;
-
-  const skip = (parseInt(page) - 1) * parseInt(limit);
-
-  const query = [];
+  
 
   query.push({
+    $group: {
+      _id: "$_id",
+      Saved_application_info:{$push:"$Saved_application_info"}
+    },
+  });
+
+  query.push({
+    $project:{
+      "_id":0
+    }
+  })
+
+  
+  const pageData = await userModal.aggregate(query);
+
+
+  const query2 = []
+
+  query2.push({
     $match: {
       user_id: user_id,
     },
   });
 
-  query.push({
-    $addFields: {
-      pageData: {
-        $slice: ["$application_applied_info.jobs", skip, parseInt(limit)],
-      },
-    },
-  });
+  query2.push({
+    $project:{
+      _id:1,
+      name:1,
+      email:1,
+      saved_info:1
+    }
+  })
 
-  query.push({
+  query2.push({
+    $unwind:"$saved_info.jobs"
+  })
+
+    query2.push({
     $lookup: {
       from: "applications",
-      localField: "pageData.jobId",
+      localField: "saved_info.jobs",
       foreignField: "job_id",
-      as: "Applied_application_info",
+      as: "Saved_application_info",
     },
   });
 
-  query.push({
-    $unwind: {
-      path: "$Applied_application_info",
-      preserveNullAndEmptyArrays: true, // Ensures jobs without provider info are preserved
-    },
-  });
+  query2.push({
+    $unwind:"$Saved_application_info"
+  })
 
-  query.push({
-    $lookup: {
-      from: "providers",
-      localField: "Applied_application_info.provider_details",
-      foreignField: "company_id",
-      as: "company",
-    },
-  });
 
-  query.push({
-    $unwind: {
-      path: "$company",
-      preserveNullAndEmptyArrays: true, // Ensures jobs without provider info are preserved
-    },
-  });
 
-  query.push({
-    $project: {
-      "company.auth_details": 0,
-      "company.job_details": 0,
-      "company.project_details": 0,
-      "Applied_application_info.applied_ids": 0,
-    },
-  });
+  const totalData = await userModal.aggregate(query2);
 
-  query.push({
-    $group: {
-      _id: {
-        applied_app_info: "$Applied_application_info",
-        company: "$company",
-      },
-    },
-  });
+   
+  return res.json({ totalData : totalData?.length, pageData:pageData[0]?.Saved_application_info})
+});
 
-  // Execute the aggregation pipeline
-  const user = await userModal.aggregate(query);
+export const getAppliedApplication = asyncHandler(async (req, res) => {
+  const { user_id } = req.user;
+let { page = 1, limit = 10 } = req.query;
 
-  const savedCount = await userModal.findOne({ user_id: user_id });
 
-  const appliedDates = {};
+const skip = (parseInt(page) - 1) * parseInt(limit);
 
-  savedCount?.application_applied_info?.jobs?.forEach((aData) => {
-    appliedDates[aData?.jobId] = aData?.appliedDate;
-  });
 
-  return res.json({
-    totalData: savedCount?.application_applied_info?.jobs?.length,
-    pageData: user?.map((data) => {
-      return {
-        ...data?._id,
-        appliedDate: appliedDates[data?._id?.applied_app_info?.job_id],
-      };
-    }),
-  });
+console.log(skip,limit)
 
-  // Check if any data is returned
-  if (user.length === 0 || !user[0]?.Saved_application_info) {
-    return res.json({
-      totalData: 0,
-      data: [],
-    });
+const query = [];
+
+query.push({
+  $match: {
+    user_id: user_id,
+  },
+});
+
+query.push({
+  $unwind : "$application_applied_info.jobs"
+})
+
+
+query.push({
+  $lookup: {
+    from: "applications",
+    localField: "application_applied_info.jobs.jobId",
+    foreignField: "job_id",
+    as: "Applied_application_info_data",
+  },
+});
+
+
+query.push({
+  $unwind : "$Applied_application_info_data"
+})
+
+
+query.push({
+  $group:{
+    _id:"$_id",
+    name:{$first:"$name"},
+    email:{$first:"$email"},
+    application_applied_info:{$push:"$application_applied_info.jobs"}
   }
+})
 
-  const totalJobs = user[0]?.saved_info?.jobs?.length || 0;
 
-  // Return the paginated results
+
+query.push({
+  $unwind : "$application_applied_info"
+})
+
+
+
+
+query.push({
+  $sort:{"application_applied_info.appliedDate":-1}
+})
+
+query.push({
+  $group:{
+        _id: "$_id", // Re-group back to user with sorted jobs
+    name: { $first: "$name" },
+    email: { $first: "$email" },
+    jobs: { $push: "$application_applied_info"}, 
+  }
+})
+
+query.push({
+  $addFields: {
+    pageData: {
+      $slice: ["$jobs", skip, parseInt(limit)], // Paginate jobs
+    },
+  },
+});
+
+
+query.push({
+  $project:{
+    _id:1,
+    name:1,
+    pageData:1
+  }
+})
+
+query.push({$unwind : "$pageData"})
+
+query.push({
+  $lookup: {
+    from: "applications",
+    localField: "pageData.jobId",
+    foreignField: "job_id",
+    as: "Applied_application_info_pageData",
+  },
+});
+
+query.push({$unwind : "$Applied_application_info_pageData"})
+
+query.push({
+  $addFields: {
+    "pageData.jobData":"$Applied_application_info_pageData" ,
+  },
+});
+
+query.push({
+  $lookup: {
+    from: "providers",
+    localField: "Applied_application_info_pageData.provider_details",
+    foreignField: "company_id",
+    as: "company",
+  },
+});
+
+query.push({$unwind : "$company"})
+
+query.push({
+  $project:{
+    "company.auth_details":0,
+    "company.job_details":0,
+    "company.project_details":0
+  }
+})
+
+query.push({
+  $addFields: {
+    "pageData.companyData":"$company" ,
+  },
+});
+
+query.push({
+  $group:{
+        _id: "$_id", // Re-group back to user with sorted jobs
+    name: { $first: "$name" },
+    pageData: { $push: "$pageData"}, 
+  }
+})
+ 
+  const pageData = await userModal.aggregate(query);
+
+
+  //To get Total No of AppliedDatas
+
+ const query2=[]
+
+  
+query2.push({
+  $match: {
+    user_id: user_id,
+  },
+});
+
+query2.push({
+  $unwind : "$application_applied_info.jobs"
+})
+
+query2.push({
+  $lookup: {
+    from: "applications",
+    localField: "application_applied_info.jobs.jobId",
+    foreignField: "job_id",
+    as: "Applied_application_info_pageData",
+  },
+});
+
+query2.push({
+  $unwind : "$Applied_application_info_pageData"
+})
+
+
+query2.push({
+  $group:{
+    _id:"$_id",
+    datas:{$push:"$Applied_application_info_pageData"}
+  }
+})
+
+
+const totalData = await userModal.aggregate(query2);
   return res.json({
-    totalData: totalJobs, // Total number of jobs saved by the user
-    data: user[0].Saved_application_info, // The paginated result
+    totalData: totalData[0].datas?.length || 0,
+    pageData: pageData[0]?.pageData
   });
 });
+
+
