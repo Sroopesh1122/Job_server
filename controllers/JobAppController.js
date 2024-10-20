@@ -342,6 +342,7 @@ export const deleteJobPost = asyncHandler(async (req, res) => {
   provider.job_details.jobs = provider.job_details.jobs.filter(
     (id) => id.jobId !== findPost?.job_id
   );
+  
   await provider.save();
   res.json({ success: true });
 });
