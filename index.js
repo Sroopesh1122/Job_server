@@ -14,8 +14,8 @@ import { UploaderRouter } from "./routers/UPloadRouters.js";
 import { LocationRouter } from './routers/LocationRouter.js';
 import path from "path";
 import { fileURLToPath } from "url";
-import { Server } from "socket.io"; // Import socket.io Server
-import http from "http"; // Import http to create server
+import { Server } from "socket.io"; 
+import http from "http"; 
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,27 +31,23 @@ DBConnection();
 // Create an HTTP server
 const server = http.createServer(app);
 
-// Set up Socket.IO with CORS for real-time communication
+
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000", // Update this if your frontend is running on a different port or domain
+    origin: "http://localhost:3000", 
     methods: ["*"]
   }
 });
 
-// Real-time socket connection handling
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
-  // Listen for events sent from clients
   socket.on('message', (data) => {
     console.log('Received message from client:', data);
 
-    // Broadcast the message to all connected clients
     io.emit('message', data);
   });
 
-  // Handle disconnection
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });
@@ -59,7 +55,6 @@ io.on('connection', (socket) => {
 
 const port = process.env.PORT || 5000;
 
-// Use existing routers
 app.use("/user", UserRouter);
 app.use("/provider", providerRouter);
 app.use("/qualifications", qulificationRouter);
@@ -69,11 +64,10 @@ app.use("/locations", LocationRouter);
 app.use("/projects", ProjectAppRouter);
 app.use("/uploader", UploaderRouter);
 
-// Handle errors and not found routes
 app.use(notFound);
 app.use(errorHandler);
 
-// Start the server with Socket.IO attached
+
 server.listen(port, () => {
   console.log("Server is listening on port " + port);
 });
