@@ -115,7 +115,7 @@ export const forgotPasswordHandler = asyncHandler(async (req, res) => {
     const resetToken = await user.generatePasswordResetToken();
     await user.save();
     if (user) {
-      const resetURL = `Hi ,Please follow this link to reset your password . This is valid till 10 minutes from now. <a href='http://localhost:5173/reset-password/${resetToken}'>Click now</a>`;
+      const resetURL = `Hi ,Please follow this link to reset your password . This is valid till 10 minutes from now. <a href='${process.env.FRONT_END_URL}/reset-password/${resetToken}'>Click now</a>`;
       const data = {
         to: email,
         text: "Hey user",
