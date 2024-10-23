@@ -103,7 +103,6 @@ export const getUserById = asyncHandler(async (req, res) => {
 
 export const forgotPasswordHandler = asyncHandler(async (req, res) => {
   const { email } = req.body;
-  console.log(email);
   if (!email) {
     throw new Error("Email required!!");
   }
@@ -113,7 +112,6 @@ export const forgotPasswordHandler = asyncHandler(async (req, res) => {
       throw new Error("Account Not Found");
     }
     const resetToken = await user.generatePasswordResetToken();
-    console.log(user);
     await user.save();
     if (user) {
       const resetURL = `Hi ,Please follow this link to reset your password . This is valid till 10 minutes from now. <a href='http://localhost:5173/reset-password/${resetToken}'>Click now</a>`;
