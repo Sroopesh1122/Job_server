@@ -27,7 +27,7 @@ export const providerSignup = asyncHandler(async (req, res) => {
     };
 
     if (user) {
-      res.json({user , token : await jwt.sign(resdata,process.env.JWT_SECRET_TOKEN)});
+      res.json({ authToken : await jwt.sign(resdata,process.env.JWT_SECRET_TOKEN)});
     } else {
       throw new Error("Account Creation Failed");
     }
