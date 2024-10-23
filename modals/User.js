@@ -1,9 +1,7 @@
 import mongoose from "mongoose";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { getRandomIds } from "../utils/generateRandomIds.js";
-import { type } from "os";
-import { url } from "inspector";
 
 const userSchema = new mongoose.Schema(
   {
