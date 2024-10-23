@@ -103,6 +103,7 @@ export const getUserById = asyncHandler(async (req, res) => {
 
 export const forgotPasswordHandler = asyncHandler(async (req, res) => {
   const { email } = req.body;
+  
   if (!email) {
     throw new Error("Email required!!");
   }
