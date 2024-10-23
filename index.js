@@ -32,20 +32,6 @@ DBConnection();
 const server = http.createServer(app);
 
 
-io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
-
-  socket.on('message', (data) => {
-    console.log('Received message from client:', data);
-
-    io.emit('message', data);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
-  });
-});
-
 const port = process.env.PORT || 5000;
 
 app.use("/user", UserRouter);
