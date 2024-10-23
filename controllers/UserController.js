@@ -4,7 +4,6 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { jobApplicationModal } from "../modals/JobApplication.js";
 import { ProjectApplicationModal } from "../modals/ProjectApplication.js";
-import { isValidObjectId } from "mongoose";
 import { sendMail } from "../utils/MailSender.js";
 import { providerModal } from "../modals/JobProvider.js";
 
