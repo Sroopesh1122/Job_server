@@ -320,6 +320,8 @@ export const getAllJobPost = asyncHandler(async (req, res) => {
   // Add the match stage to the query pipeline
   query.push({ $match: matchStage });
 
+  query.push({ $sort: { createdAt: -1 } });
+
   // Add the lookup stage to join with the providers collection
   query.push({
     $lookup: {

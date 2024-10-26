@@ -681,4 +681,163 @@ const totalData = await userModal.aggregate(query2);
   });
 });
 
+export const getFollowingCompanies = asyncHandler(async (req, res) => {
+  const { user_id } = req.user;
+  const { page = 1, limit = 10 } = req.query;
+
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+
+  const query = [];
+
+  query.push({
+    $match: {
+      user_id: user_id,
+    },
+  });
+
+  query.push({
+    $project:{
+      _id:1,
+      name:1,
+      email:1,
+      follwing:1
+    }
+  })
+
+  query.push({
+    $unwind:"$follwing"
+  })
+
+    query.push({
+    $lookup: {
+      from: "providers",
+      localField: "follwing",
+      foreignField: "company_id",
+      as: "company",
+    },
+  });
+
+  query.push({
+    $unwind:"$company"
+  })
+
+  query.push({
+    $project: {
+      "company.auth_details": 0,
+    },
+  });
+
+  query.push({
+    $group:{
+      _id:"$_id",
+      name:{$first:"$name"},
+      email:{$first:"$email"},
+      companies:{$push:"$company"}
+    }
+  })
+
+  query.push({
+    $project:{
+      _id:1,
+      name:1,
+      email:1,
+      companies : {$reverseArray: "$companies"}
+    }
+  })
+
+
+  query.push({
+    $addFields: {
+      pageData: {
+        $slice: ["$companies", skip, parseInt(limit)],
+      },
+    },
+  });
+
+
+  query.push({
+    $unwind:"$pageData"
+  })
+
+  query.push({
+    $group:{
+      _id:"$_id",
+      companiesData : {$push:"$pageData"}
+    }
+  })
+
+  query.push({
+    $unwind:"$companiesData"
+  })
+
+  query.push({
+    $project:{
+      _id:0
+    }
+  })
+
+
+
+
+  
+  const pageData = await userModal.aggregate(query);
+
+
+  const query2 = []
+
+  query2.push({
+    $match: {
+      user_id: user_id,
+    },
+  });
+
+  query2.push({
+    $project:{
+      _id:1,
+      name:1,
+      email:1,
+      follwing:1
+    }
+  })
+
+  query2.push({
+    $unwind:"$follwing"
+  })
+
+  query2.push({
+    $lookup: {
+      from: "providers",
+      localField: "follwing",
+      foreignField: "company_id",
+      as: "company",
+    },
+  });
+
+  query2.push({
+    $unwind:"$company"
+  })
+
+  query2.push({
+    $project: {
+      "company.auth_details": 0,
+      "company.job_details": 0,
+      "company.project_details": 0,
+    },
+  });
+
+  query2.push({
+    $group:{
+      _id:"$_id",
+      name:{$first:"$name"},
+      email:{$first:"$email"},
+      companies:{$push:"$company"}
+    }
+  })
+  
+  const totalData = await userModal.aggregate(query2);
+
+  return res.json({ totalData : totalData[0]?.companies?.length || 0, pageData:pageData || []})
+});
+
+
 
