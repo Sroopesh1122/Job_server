@@ -188,6 +188,9 @@ export const getAllProviders = asyncHandler(async (req, res) => {
   // Match stage
   query.push({ $match: matchStage });
 
+  // Sort stage - placed before pagination stages
+  query.push({ $sort: { createdAt: -1 } });
+
   // Project stage: Exclude auth_details
   query.push({
     $project: {
@@ -216,6 +219,7 @@ export const getAllProviders = asyncHandler(async (req, res) => {
   const results = await providerModal.aggregate(query);
   res.json({ totalDatas: totalResults, pageData: results });
 });
+
 
 export const getCompanyTitles = asyncHandler(async (req, res) => {
   const { q } = req.params;

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { addJobPost, addprojectPost,  followCompany,  forgotPasswordHandler, getAppliedApplication,  getSavedApplication , getUser, getUserById, passwordResetHandler, saveJobApplication, signin, signup, unfollowCompany, unSaveJobApplication, updateUser } from "../controllers/UserController.js";
+import { addJobPost, addprojectPost,  followCompany,  forgotPasswordHandler, getAppliedApplication,  getFollowingCompanies,  getSavedApplication , getUser, getUserById, passwordResetHandler, saveJobApplication, signin, signup, unfollowCompany, unSaveJobApplication, updateUser } from "../controllers/UserController.js";
 import {  authUserMiddleware, waitMiddleware } from "../middlewares/AuthHandler.js";
 
 
@@ -19,6 +19,7 @@ UserRouter.post("/job/apply",authUserMiddleware,waitMiddleware,addJobPost);
 UserRouter.post("/job/save",authUserMiddleware,waitMiddleware,saveJobApplication);
 UserRouter.get("/job/saved-list",authUserMiddleware,getSavedApplication)
 UserRouter.get("/job/applied-list",authUserMiddleware,waitMiddleware,getAppliedApplication)
+UserRouter.get("/companies/following",authUserMiddleware,getFollowingCompanies)
 UserRouter.post("/job/unsave",authUserMiddleware,waitMiddleware,unSaveJobApplication);
 UserRouter.post("/project",authUserMiddleware,addprojectPost)
 UserRouter.post("/company/follow",authUserMiddleware,waitMiddleware,followCompany)
