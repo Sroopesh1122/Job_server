@@ -14,11 +14,11 @@ export const sendMail =asyncHandler(async (data,req,res)=>{
       });
       
         const info = await transporter.sendMail({
-          from: '"Hey 👻'+ process.env.MAIL_ID , // sender address
+          from: '"Emploez.in"' , // sender address
           to: data.to, // list of receivers
           subject: data.subject, // Subject line
           text: data.text, // plain text body
-          html: data.htm, // html body
+          html: data.html, // html body
         });
       
         console.log("Message sent: %s", info.messageId);

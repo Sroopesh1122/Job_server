@@ -2,6 +2,7 @@ import asyncHandler from "express-async-handler";
 import userModal from "../modals/User.js";
 import jwt, { decode } from "jsonwebtoken";
 import { providerModal } from "../modals/JobProvider.js";
+import { freelancerModel } from "../modals/Freelancer.js";
 
 export const authUserMiddleware = asyncHandler(async (req, res, next) => {
   let token = null;
@@ -34,7 +35,15 @@ export const authProviderMiddleware = asyncHandler(async (req, res, next) => {
     } catch (error) {
       throw new Error("Not Authorized token expired ");
     }
-    const user = await providerModal.findOne({company_id : decoded.userId});
+
+    let user=null;
+    if(decoded.role === "freelancer")
+    {
+       user = await freelancerModel.findOne({freelancer_id : decoded.userId})     
+    }
+    else{
+      user = await providerModal.findOne({company_id : decoded.userId});
+    }
     if (!user) {
       throw new Error("Account Not Found");
     }
@@ -44,6 +53,29 @@ export const authProviderMiddleware = asyncHandler(async (req, res, next) => {
     throw new Error("There is no token attached to header");
   }
 });
+
+export const authFreelancerMiddleware = asyncHandler(async (req, res, next) => {
+  let token = null;
+  if (req?.headers?.authorization) {
+    token = req?.headers?.authorization.split(" ")[1];
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET_TOKEN);
+    } catch (error) {
+      throw new Error("Not Authorized token expired ");
+    }
+    const user = await freelancerModel.findOne({freelancer_id : decoded.userId});
+    if (!user) {
+      throw new Error("Account Not Found");
+    }
+    req.user = user;
+    next();
+  } else {
+    throw new Error("There is no token attached to header");
+  }
+});
+
+
 
 
 export const getProfileMiddleware = asyncHandler(async (req, res, next) => {

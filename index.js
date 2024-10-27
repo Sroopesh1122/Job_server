@@ -16,6 +16,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { Server } from "socket.io"; 
 import http from "http"; 
+import { freelancerRouter } from "./routers/FreelanceRouter.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,6 +37,7 @@ const port = process.env.PORT || 5000;
 
 app.use("/user", UserRouter);
 app.use("/provider", providerRouter);
+app.use("/freelancer", freelancerRouter);
 app.use("/qualifications", qulificationRouter);
 app.use("/skills", skillsRouter);
 app.use("/jobs", JobAppRouter);
