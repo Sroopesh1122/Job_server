@@ -284,7 +284,9 @@ export const getAllJobPost = asyncHandler(async (req, res) => {
       { must_skills: { $regex: s.join("|"), $options: "i" } },
       { other_skills: { $regex: s.join("|"), $options: "i" } },
     ];
-  } else {
+  } 
+  else
+  {
     if (skills) {
       const s = skills.split(",");
       matchStage.$or = [

@@ -25,6 +25,7 @@ const projectApplicationSchema = new mongoose.Schema({
     type: String ,
   },
   applied_ids: [{ type: String }],
+  skills:[{type:String}]
 }, {
   timestamps: true,
 });

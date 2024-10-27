@@ -6,6 +6,7 @@ import { jobApplicationModal } from "../modals/JobApplication.js";
 import { ProjectApplicationModal } from "../modals/ProjectApplication.js";
 import { sendMail } from "../utils/MailSender.js";
 import { providerModal } from "../modals/JobProvider.js";
+import { freelancerModel } from "../modals/Freelancer.js";
 
 export const signup = asyncHandler(async (req, res) => {
   const { email, password, name } = req.body;
@@ -43,6 +44,7 @@ export const signup = asyncHandler(async (req, res) => {
 
 export const signin = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
+ 
   if (!email || !password) {
     throw new Error("All Fields Required!!");
   }
@@ -51,9 +53,13 @@ export const signin = asyncHandler(async (req, res) => {
     if (!user) {
       throw new Error("Account Not found");
     }
+
+
     if (!(await user.isPasswordMatched(password))) {
       throw new Error("Incorrect password");
     }
+
+   
 
     const resdata = {
       userId: user.user_id,
@@ -114,19 +120,42 @@ export const forgotPasswordHandler = asyncHandler(async (req, res) => {
     const resetToken = await user.generatePasswordResetToken();
     await user.save();
     if (user) {
-      const resetURL = `Hi ,Please follow this link to reset your password . This is valid till 10 minutes from now. <a href='${process.env.FRONT_END_URL}/reset-password/${resetToken}'>Click now</a>`;
+      const resetURL = `${process.env.FRONT_END_URL}/reset-password/${resetToken}`;
+      const htmlContent = `
+        <p>Hi ${user.name},</p>
+        <p>You recently requested to reset your password. Click the link below to reset it. This link will expire in 5 minutes:</p>
+        <p><a href="${resetURL}">Reset your password</a></p>
+        <p>If you did not request a password reset, please ignore this email or contact support if you have questions.</p>
+        <p>Thank you,<br>Your Company Name</p>
+      `;
+    
+      const textContent = `
+        Hi ${user.name},
+        
+        You recently requested to reset your password. Copy and paste the link below into your browser to reset it. This link will expire in 10 minutes:
+        
+        ${resetURL}
+        
+        If you did not request a password reset, please ignore this email or contact support if you have questions.
+    
+        Thank you,
+        Emploze.in
+      `;
+    
       const data = {
         to: email,
-        text: "Hey user",
-        subject: "Forgot passowrd (Reset Password)",
-        htm: resetURL,
+        from: "Emploez",  // Use a verified and recognizable email address
+        subject: "Password Reset Request",
+        text: textContent,
+        html: htmlContent,
       };
+    
       try {
         await sendMail(data);
       } catch (error) {
         console.log(error);
       }
-      res.json({ resetToken });
+      res.json({ message: "Password reset email sent" });
     } else {
       throw new Error("Profile Update Failed");
     }
@@ -200,23 +229,27 @@ export const addJobPost = asyncHandler(async (req, res) => {
 });
 
 export const addprojectPost = asyncHandler(async (req, res) => {
-  const { _id } = req.user;
+  const { user_id } = req.user;
   const { postId } = req.body;
   if (!postId) {
     throw new Error("All fields Required");
   }
 
-  const findPost = await ProjectApplicationModal.findById(postId);
+  const findPost = await ProjectApplicationModal.findOne({project_id:postId});
   if (!findPost) {
     throw new Error("Post not found!!");
   }
-  if (findPost.applied_ids.find((i) => i.toString() === _id.toString())) {
+
+  if (findPost.applied_ids.find((i) => i === user_id)) {
     throw new Error("Already applied for this post");
   }
-  findPost.applied_ids.push(_id);
+
+  findPost.applied_ids.push(user_id);
   await findPost.save();
-  const user = await userModal.findById(_id);
-  user.application_applied_info.projects.push(postId);
+  const user = await userModal.findOne({user_id:user_id});
+  user.application_applied_info.projects.push({
+    projectId: postId,
+  });
   await user.save();
   res.json({ success: true });
 });
@@ -259,7 +292,7 @@ export const unfollowCompany = asyncHandler(async (req, res) => {
     throw new Error("Company Not Found!");
   }
 
-  if (company.followers.find((id) => id !== user_id)) {
+  if (!company.followers.find((id) => id === user_id)) {
     throw new Error("user id not found");
   }
 
