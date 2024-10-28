@@ -21,6 +21,6 @@ UserRouter.get("/job/saved-list",authUserMiddleware,getSavedApplication)
 UserRouter.get("/job/applied-list",authUserMiddleware,waitMiddleware,getAppliedApplication)
 UserRouter.get("/companies/following",authUserMiddleware,getFollowingCompanies)
 UserRouter.post("/job/unsave",authUserMiddleware,waitMiddleware,unSaveJobApplication);
-UserRouter.post("/project/apply",authUserMiddleware,addprojectPost)
+UserRouter.post("/project/apply",authUserMiddleware,waitMiddleware,addprojectPost)
 UserRouter.post("/company/follow",authUserMiddleware,waitMiddleware,followCompany)
 UserRouter.post("/company/unfollow",authUserMiddleware,waitMiddleware,unfollowCompany)
