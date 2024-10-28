@@ -14,7 +14,7 @@ export const createProjectPost = asyncHandler(async (req, res) => {
     name,
     description,
     cost,
-    dueTime: new Date(),
+    dueTime,
     provider: freelancer_id,
     skills
   });
@@ -258,4 +258,75 @@ export const getProjectsByText = asyncHandler(async (req, res) => {
 
   return res.json({totalData:results.length , pageData:[...pageData]})
 });
+
+
+export const getAppliedCandidates = asyncHandler(async (req,res)=>{
+
+  const {id ,limit=10,page=1}  = req.query;
+  const query = []
+  const matchStage = { project_id: id };
+
+  query.push({ $match: matchStage });
+
+  const skip = (parseInt(page) - 1 )* parseInt(limit);
+  query.push({
+    $addFields: {
+      pageData: { $slice: ["$applied_ids", skip, parseInt(limit)] }
+    }
+  })
+
+  query.push({
+    $addFields: {
+      reversePagedata: { $reverseArray: "$pageData" }
+    }
+  })
+
+  query.push({
+    $project:{
+      applied_ids:0,
+      pageData:0
+    }
+  })
+
+  query.push({ $unwind: { path: "$reversePagedata" } });
+  query.push({
+    $lookup: {
+      from: "users",
+      localField: "reversePagedata",
+      foreignField: "user_id", 
+      as: "candidate_info",
+    },
+  });
+
+  query.push({
+    $project:{
+      "candidate_info.auth_details":0,
+      "candidate_info.application_applied_info":0,
+      "candidate_info.saved_info":0
+    }
+  })
+
+  query.push({ $unwind: { path: "$candidate_info" } });
+  query.push({
+    $group: {
+      _id: "$_id",
+      name: { $first: "$name" },
+      description: { $first: "$description" },
+      cost: { $first: "$cost" },
+      dueTime: { $first: "$dueTime" },
+      skills: { $first: "$skills" },
+      provider: { $first: "$provider" },
+      project_id: { $first: "$project_id" },
+      candidates: { $push: "$candidate_info" } // Aggregate candidates into an array
+    }
+  });
+  
+
+  const results = await ProjectApplicationModal.aggregate(query);
+
+  return res.json(results)
+
+
+
+})
 
