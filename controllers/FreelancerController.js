@@ -171,25 +171,53 @@ export const FreelancerPasswordResetHandler = asyncHandler(async (req, res) => {
   }
 });
 
-export const freelancerGetProfile= asyncHandler(async(req,res)=>{
-  const {freelancer_id} = req.user;
+export const freelancerGetProfile = asyncHandler(async (req, res) => {
+  const { freelancer_id } = req.user;
+  const query = [];
 
-  const findAccount  = await freelancerModel.findOne({freelancer_id});
-  if(!findAccount)
-  {
-    throw new Error("Account Not found");
+  query.push({
+    $match: { freelancer_id }
+  });
+
+  query.push({
+    $addFields: {
+      reverseIds: { $reverseArray: "$project_details.projects" }
+    }
+  });
+
+  query.push({
+    $unwind: { path: "$reverseIds" }
+  });
+
+  query.push({
+    $addFields: { projectId: "$reverseIds.projectId" }
+  });
+
+  query.push({
+    $lookup: {
+      from: "projects",
+      localField: "projectId",
+      foreignField: "project_id",
+      as: "project_info"
+    }
+  });
+
+  query.push({
+    $group: {
+      _id: "$_id",
+      projects: {
+        $push: {
+          id: "$projectId",
+          projectData: { $arrayElemAt: ["$project_info", 0] }  }
+      }
+    }
+  });
+
+  const findAccount = await freelancerModel.aggregate(query);
+  if (!findAccount) {
+    throw new Error("Account not found");
   }
   return res.json(findAccount);
-})
+});
 
-export const freelancerGetProfileById= asyncHandler(async(req,res)=>{
-  const {id} = req.params;
-
-  const findAccount  = await freelancerModel.findOne({freelancer_id:id});
-  if(!findAccount)
-  {
-    throw new Error("Account Not found");
-  }
-  return res.json(findAccount);
-})
 
