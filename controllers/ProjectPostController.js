@@ -175,3 +175,87 @@ export const deleteProjectPost = asyncHandler(async (req, res) => {
   await provider.save();
   res.json({ success: true });
 });
+
+export const getProjectsSuggestionByText = asyncHandler(async (req, res) => {
+  const { q } = req.params;
+  const query = [];
+  const matchStage = {};
+
+  if (q && q !== "") {
+    matchStage.$or = [
+      { name: { $regex: `.*${q.trim()}.*`, $options: "i" } },
+      { skills: { $regex: `.*${q.trim()}.*`, $options: "i" } }
+    ];
+  }
+
+  query.push({ $match: matchStage });
+
+  query.push({
+    $project: {
+      name: 1,
+      skills: 1,
+    },
+  });
+
+  // Get matching projects
+  const results = await ProjectApplicationModal.aggregate(query);
+
+  // Transform results to get unique array of matching strings (names and skills)
+  const matchedStrings = results.reduce((acc, item) => {
+    if (item.name && new RegExp(q, "i").test(item.name)) {
+      acc.add(item.name);
+    }
+    if (item.skills) {
+      item.skills.forEach((skill) => {
+        if (new RegExp(q, "i").test(skill)) {
+          acc.add(skill);
+        }
+      });
+    }
+    return acc;
+  }, new Set());
+
+  res.json([...matchedStrings]); 
+});
+
+export const getProjectsByText = asyncHandler(async (req, res) => {
+  const { q ,limit=10,page=1} = req.query;
+  const query = [];
+  const matchStage = {};
+
+  if (q && q !== "") {
+    matchStage.$or = [
+      { name: { $regex: `.*${q.trim()}.*`, $options: "i" } },
+      { skills: { $regex: `.*${q.trim()}.*`, $options: "i" } }
+    ];
+  }
+
+  query.push({ $match: matchStage });
+
+  query.push({
+    $lookup: {
+      from: "freelancers",
+      localField: "provider",
+      foreignField: "freelancer_id", 
+      as: "provider_info",
+    },
+  });
+
+  query.push({ $unwind: { path: "$provider_info", preserveNullAndEmptyArrays: true } });
+
+  query.push({
+    $project: {
+      "provider_info.auth_details": 0, 
+    },
+  });
+
+
+  const results = await ProjectApplicationModal.aggregate(query);
+
+  const skip = (parseInt(page) -1 ) * parseInt(limit);
+  let pageData = results.slice(skip, (parseInt(page)*parseInt(limit)))
+
+
+  return res.json({totalData:results.length , pageData:[...pageData]})
+});
+
