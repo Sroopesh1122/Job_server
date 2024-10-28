@@ -171,9 +171,14 @@ export const FreelancerPasswordResetHandler = asyncHandler(async (req, res) => {
   }
 });
 
-export const freelancerGetProfile = asyncHandler(async (req, res) => {
-  const { freelancer_id } = req.user;
+export const freelancerAllPost = asyncHandler(async (req, res) => {
+  const { freelancer_id } = req.query;
   const query = [];
+
+  if(!freelancer_id)
+  {
+    throw new Error("Id required")
+  }
 
   query.push({
     $match: { freelancer_id }
@@ -219,5 +224,16 @@ export const freelancerGetProfile = asyncHandler(async (req, res) => {
   }
   return res.json(findAccount);
 });
+
+export const getFreelancerProfile = asyncHandler(async(req,res)=>{
+  const {freelancer_id} = req.user;
+
+  const findUser = await freelancerModel.findOne({freelancer_id});
+  if(!findUser)
+  {
+    throw new Error("Account Not Found")
+  }
+  return res.json(findUser)
+})
 
 

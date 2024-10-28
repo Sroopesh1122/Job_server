@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authFreelancerMiddleware, authProviderMiddleware, waitMiddleware } from "../middlewares/AuthHandler.js";
-import { FreelancerForgotPasswordHandler, freelancerGetProfile, FreelancerPasswordResetHandler, FreelancerSignin, FreelancerSignup, FreelancerUpdateUser } from "../controllers/FreelancerController.js";
+import { freelancerAllPost, FreelancerForgotPasswordHandler,  FreelancerPasswordResetHandler, FreelancerSignin, FreelancerSignup, FreelancerUpdateUser, getFreelancerProfile } from "../controllers/FreelancerController.js";
 
 export const freelancerRouter = Router();
 
@@ -9,4 +9,5 @@ freelancerRouter.post("/login", FreelancerSignin);
 freelancerRouter.put("/update", authFreelancerMiddleware, FreelancerUpdateUser);
 freelancerRouter.post("/forgot-password", FreelancerForgotPasswordHandler);
 freelancerRouter.post("/reset-password", FreelancerPasswordResetHandler);
-freelancerRouter.get("/profile",authFreelancerMiddleware,freelancerGetProfile)
+freelancerRouter.get("/all-post",freelancerAllPost)
+freelancerRouter.get("/profile",authFreelancerMiddleware,getFreelancerProfile)
