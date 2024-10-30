@@ -6,7 +6,7 @@ import { jobApplicationModal } from "../modals/JobApplication.js";
 import { ProjectApplicationModal } from "../modals/ProjectApplication.js";
 import { sendMail } from "../utils/MailSender.js";
 import { providerModal } from "../modals/JobProvider.js";
-import { freelancerModel } from "../modals/Freelancer.js";
+import { sendNotification } from "../utils/NotificationSender.js";
 
 export const signup = asyncHandler(async (req, res) => {
   const { email, password, name } = req.body;
@@ -79,6 +79,15 @@ export const updateUser = asyncHandler(async (req, res) => {
       new: true,
     });
     if (user) {
+      const data={
+        title:"Profile updated",
+        description:"User profile updated successfully",
+        img:"",
+        navigate_link:"/user/profile",
+        receiver:req?.user?.user_id,
+        sender:""
+      }
+      sendNotification(data)
       res.json(user);
     } else {
       throw new Error("Profile Update Failed");
@@ -87,6 +96,7 @@ export const updateUser = asyncHandler(async (req, res) => {
     throw new Error(error);
   }
 });
+
 
 export const getUser = asyncHandler(async (req, res) => {
   const { _id } = req.user;
@@ -126,7 +136,7 @@ export const forgotPasswordHandler = asyncHandler(async (req, res) => {
         <p>You recently requested to reset your password. Click the link below to reset it. This link will expire in 5 minutes:</p>
         <p><a href="${resetURL}">Reset your password</a></p>
         <p>If you did not request a password reset, please ignore this email or contact support if you have questions.</p>
-        <p>Thank you,<br>Your Company Name</p>
+        <p>Thank you,<br>Emploze.in</p>
       `;
     
       const textContent = `
@@ -144,7 +154,7 @@ export const forgotPasswordHandler = asyncHandler(async (req, res) => {
     
       const data = {
         to: email,
-        from: "Emploez",  // Use a verified and recognizable email address
+        from: `${process.env.MAIL_ID}`,  // Use a verified and recognizable email address
         subject: "Password Reset Request",
         text: textContent,
         html: htmlContent,
@@ -184,6 +194,15 @@ export const passwordResetHandler = asyncHandler(async (req, res) => {
     user.auth_details.passwordResetExpiresAt = undefined;
     await user.save();
     if (user) {
+      const data={
+        title:"Password Reset",
+        description:"Account password Reset Successfully",
+        img:"https://icons.veryicon.com/png/o/miscellaneous/remitting-country-linear-icon/password-148.png",
+        navigate_link:"",
+        receiver:req?.user?.user_id,
+        sender:""
+      }
+      sendNotification(data)
       res.json({ user });
     } else {
       throw new Error("Profile Update Failed");
@@ -199,7 +218,6 @@ export const addJobPost = asyncHandler(async (req, res) => {
   const { _id, user_id } = req.user;
   const { applicationId } = req.body;
 
-  console.log(applicationId);
   if (!applicationId) {
     throw new Error("Application is Required!!");
   }
@@ -276,6 +294,15 @@ export const followCompany = asyncHandler(async (req, res) => {
   user.follwing.push(company.company_id);
   await user.save();
   await company.save();
+  const data={
+    title:"Following",
+    description:`Started following ${company?.company_name}`,
+    img:company?.img?.url||"",
+    navigate_link:`/user/company/${company?.company_id}`,
+    receiver:req?.user?.user_id,
+    sender:""
+  }
+  sendNotification(data)
   return res.json({ success: true });
 });
 
@@ -338,8 +365,6 @@ export const unSaveJobApplication = asyncHandler(async (req, res) => {
   await user.save();
   return res.json({ success: true });
 });
-
-
 
 
 export const getSavedApplication = asyncHandler(async (req, res) => {

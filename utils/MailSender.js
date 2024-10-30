@@ -14,7 +14,7 @@ export const sendMail =asyncHandler(async (data,req,res)=>{
       });
       
         const info = await transporter.sendMail({
-          from: '"Emploez.in"' , // sender address
+          from: `"Emploez.in" <${data.from}>` , // sender address
           to: data.to, // list of receivers
           subject: data.subject, // Subject line
           text: data.text, // plain text body
