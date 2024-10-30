@@ -3,6 +3,8 @@ import { jobApplicationModal } from "../modals/JobApplication.js";
 import { providerModal } from "../modals/JobProvider.js";
 import { jobCategories } from "../assets/Jobs.js";
 import { query } from "express";
+import { sendNotification } from "../utils/NotificationSender.js";
+
 
 export const createJobPost = asyncHandler(async (req, res) => {
   const {
@@ -61,12 +63,21 @@ export const createJobPost = asyncHandler(async (req, res) => {
   if (!jobPost) {
     throw new Error("Job creation Failed");
   }
+
   const provider = await providerModal.findById(_id);
   if (provider) {
     provider.job_details.jobs.push({ jobId: jobPost.job_id });
     await provider.save();
   }
 
+  const notificationData={
+    title:title,
+    description:`${provider?.company_name} posted application`,
+    img:provider?.img?.url || "",
+    navigate_link:`/user/job-post/${jobPost?.job_id}`,
+    sender:provider?.company_id
+  }
+  sendPostAddedNotification({sendData:notificationData,followersList:provider?.followers})
   res.json(jobPost);
 });
 
@@ -542,3 +553,12 @@ export const getApplicationStatus = asyncHandler(async (req, res) => {
   }
   return res.json({ applicationStatus: applicationSatuts });
 });
+
+
+
+const sendPostAddedNotification = async({sendData={} ,followersList=[]})=>{
+  followersList?.forEach((user)=>{
+    sendData.receiver = user
+    sendNotification(sendData)
+  })
+}

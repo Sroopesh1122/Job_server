@@ -180,6 +180,13 @@ export const freelancerAllPost = asyncHandler(async (req, res) => {
     throw new Error("Id required")
   }
 
+
+  const findUser = await freelancerModel.findOne({freelancer_id});
+  if(!findUser)
+  {
+    throw new Error("Account not Found")
+  }
+
   query.push({
     $match: { freelancer_id }
   });

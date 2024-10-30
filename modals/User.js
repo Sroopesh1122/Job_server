@@ -63,7 +63,7 @@ const userSchema = new mongoose.Schema(
       },
       gender: {
         type: String,
-        enum: ["Male", "Female", "Transgender","male","MALE","female","FEMALE","transgender"],
+        enum: ["Male", "Female", "Transgender","male","MALE","female","FEMALE","transgender",""],
       },
       skills: [
         {
