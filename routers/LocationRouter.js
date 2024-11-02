@@ -5,5 +5,5 @@ import { waitMiddleware } from "../middlewares/AuthHandler.js";
 export const LocationRouter = Router();
 
 
-LocationRouter.get("/",waitMiddleware ,getAllLocations);
+LocationRouter.get("/",getAllLocations);
 

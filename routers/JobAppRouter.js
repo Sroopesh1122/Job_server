@@ -19,9 +19,9 @@ JobAppRouter.post("/create", authProviderMiddleware, createJobPost);
 JobAppRouter.delete("/:id", authProviderMiddleware, deleteJobPost);
 JobAppRouter.get("/category", getAllCategoriesAndSubCategories);
 JobAppRouter.get("/suggestion",getProfileMiddleware ,getSuggestedJobs);
-JobAppRouter.post("/user/status",waitMiddleware,getApplicationStatus)
+JobAppRouter.post("/user/status",getApplicationStatus)
 JobAppRouter.put("/status/change",authProviderMiddleware,updateApplicationStatus)
-JobAppRouter.get("/:id", waitMiddleware,getJobPost);
+JobAppRouter.get("/:id", getJobPost);
 
 //remove it later 
 JobAppRouter.get("/sample/jobs", async (req, res) => {

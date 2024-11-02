@@ -8,8 +8,8 @@ export const ProjectAppRouter = Router();
 
 ProjectAppRouter.post("/create",authFreelancerMiddleware,createProjectPost);
 ProjectAppRouter.get("/apply-candidate",getAppliedCandidates)
-ProjectAppRouter.get("/project/search",waitMiddleware,getProjectsByText)
-ProjectAppRouter.get("/search/:q",waitMiddleware,getProjectsSuggestionByText)
-ProjectAppRouter.get("/:id",waitMiddleware,getProject);
+ProjectAppRouter.get("/project/search",getProjectsByText)
+ProjectAppRouter.get("/search/:q",getProjectsSuggestionByText)
+ProjectAppRouter.get("/:id",getProject);
 ProjectAppRouter.get("/",getProfileMiddleware,getAllProject);
 ProjectAppRouter.delete("/:id",authFreelancerMiddleware,deleteProjectPost)

@@ -26,7 +26,7 @@ providerRouter.put(
 providerRouter.post("/forgot-password", ProviderForgotPasswordHandler);
 providerRouter.post("/reset-password", ProviderPasswordResetHandler);
 providerRouter.get("/profile", authProviderMiddleware, providerGetProfile);
-providerRouter.get("/allcompany",waitMiddleware,getAllProviders)
-providerRouter.get("/searchCompany/:q",waitMiddleware , getCompanyTitles)
-providerRouter.get("/:id", waitMiddleware, getProviderProfileById);
+providerRouter.get("/allcompany",getAllProviders)
+providerRouter.get("/searchCompany/:q",getCompanyTitles)
+providerRouter.get("/:id", getProviderProfileById);
 
