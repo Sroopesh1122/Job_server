@@ -5,4 +5,4 @@ import { waitMiddleware } from "../middlewares/AuthHandler.js";
 export const skillsRouter = Router();
 
 
-skillsRouter.get("/",waitMiddleware,getAllSkills) 
+skillsRouter.get("/",getAllSkills) 
