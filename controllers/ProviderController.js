@@ -6,6 +6,8 @@ import { jobApplicationModal } from "../modals/JobApplication.js";
 
 export const providerSignup = asyncHandler(async (req, res) => {
   const { email, password, company_name } = req.body;
+  console.log(req.body);
+  
 
   if (!email || !password || !company_name) {
     throw new Error("All Fields Required!!");

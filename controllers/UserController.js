@@ -149,7 +149,7 @@ export const forgotPasswordHandler = asyncHandler(async (req, res) => {
         If you did not request a password reset, please ignore this email or contact support if you have questions.
     
         Thank you,
-        Emploze.in
+        Emploez.in
       `;
     
       const data = {
