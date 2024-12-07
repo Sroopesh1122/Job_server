@@ -136,7 +136,7 @@ export const forgotPasswordHandler = asyncHandler(async (req, res) => {
         <p>You recently requested to reset your password. Click the link below to reset it. This link will expire in 5 minutes:</p>
         <p><a href="${resetURL}">Reset your password</a></p>
         <p>If you did not request a password reset, please ignore this email or contact support if you have questions.</p>
-        <p>Thank you,<br>Emploze.in</p>
+        <p>Thank you,<br>Emploez.in</p>
       `;
     
       const textContent = `

@@ -150,11 +150,11 @@ export const ProviderForgotPasswordHandler = asyncHandler(async(req,res)=>{
         <p>You recently requested to reset your password. Click the link below to reset it. This link will expire in 5 minutes:</p>
         <p><a href="${resetURL}">Reset your password</a></p>
         <p>If you did not request a password reset, please ignore this email or contact support if you have questions.</p>
-        <p>Thank you,<br>Emploze.in</p>
+        <p>Thank you,<br>Emploez.in</p>
       `;
     
       const textContent = `
-        Hi ${user.name},
+        Hi ${user.company_name},
         
         You recently requested to reset your password. Copy and paste the link below into your browser to reset it. This link will expire in 10 minutes:
         
