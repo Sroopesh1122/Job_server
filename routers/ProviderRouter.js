@@ -10,6 +10,8 @@ import {
   providerSignin,
   providerSignup,
   providerUpdateUser,
+  sendProviderOTP,
+  verifyProviderOTP
 } from "../controllers/ProviderController.js";
 import { authProviderMiddleware, waitMiddleware } from "../middlewares/AuthHandler.js";
 
@@ -30,3 +32,5 @@ providerRouter.get("/allcompany",getAllProviders)
 providerRouter.get("/searchCompany/:q",getCompanyTitles)
 providerRouter.get("/:id", getProviderProfileById);
 
+providerRouter.post("/send-otp", sendProviderOTP);
+providerRouter.post("/verify-otp", verifyProviderOTP);

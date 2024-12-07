@@ -3,6 +3,55 @@ import jwt from "jsonwebtoken";
 import crypto from 'crypto'
 import { providerModal } from "../modals/JobProvider.js";
 import { jobApplicationModal } from "../modals/JobApplication.js";
+import otpGenerator from "otp-generator";
+import { sendMail } from "../utils/MailSender.js";
+
+const otpStore = new Map();
+
+export const sendProviderOTP = asyncHandler(async(req, res) => {
+  const { email } = req.body;
+
+  if(!email) {
+    throw new Error("Email is required!");
+  }
+
+  const userExists = await providerModal.findOne({ email });
+  if(userExists) {
+    throw new Error("Email already registered.");
+  }
+
+  const otp = otpGenerator.generate(6, {
+    uppercase: false,
+    specialChars: false,
+  });
+
+  otpStore.set(email, otp);
+
+  await sendMail({
+    from: process.env.MAIL_ID,
+    to: email,
+    subject: "Your OTP for Signup",
+    text: `Your OTP is ${otp}. It is valid for 5 minutes.`,
+    html: `<p>Your OTP is <strong>${otp}</strong>. It is valid for 5 minutes.</p>`,
+  });
+
+  res.json({ message: "OTP sent successfully!" });
+});
+
+export const verifyProviderOTP = asyncHandler(async(req, res) => {
+  const { email, otp } = req.body;  
+
+  if(!email || !otp) {
+    throw new Error("Email and OTP are required!");
+  }
+  const validOtp = otpStore.get(email);
+  if(validOtp && validOtp === otp) {
+    otpStore.delete(email);
+    res.json({ message: "OTP verified successfully!" });
+  } else {
+    throw new Error("Invalid or Expired OTP!");
+  }
+});
 
 export const providerSignup = asyncHandler(async (req, res) => {
   const { email, password, company_name } = req.body;
