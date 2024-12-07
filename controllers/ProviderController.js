@@ -144,7 +144,42 @@ export const ProviderForgotPasswordHandler = asyncHandler(async(req,res)=>{
     const resetToken = await user.generatePasswordResetToken();
     await user.save();
     if (user) {
-      res.json({resetToken});
+      const resetURL = `${process.env.FRONT_END_URL}/provider/reset-password/${resetToken}`;
+      const htmlContent = `
+        <p>Hi ${user.company_name},</p>
+        <p>You recently requested to reset your password. Click the link below to reset it. This link will expire in 5 minutes:</p>
+        <p><a href="${resetURL}">Reset your password</a></p>
+        <p>If you did not request a password reset, please ignore this email or contact support if you have questions.</p>
+        <p>Thank you,<br>Emploze.in</p>
+      `;
+    
+      const textContent = `
+        Hi ${user.name},
+        
+        You recently requested to reset your password. Copy and paste the link below into your browser to reset it. This link will expire in 10 minutes:
+        
+        ${resetURL}
+        
+        If you did not request a password reset, please ignore this email or contact support if you have questions.
+    
+        Thank you,
+        Emploez.in
+      `;
+    
+      const data = {
+        to: email,
+        from: `${process.env.MAIL_ID}`,  // Use a verified and recognizable email address
+        subject: "Password Reset Request",
+        text: textContent,
+        html: htmlContent,
+      };
+    
+      try {
+        await sendMail(data);
+      } catch (error) {
+        console.log(error);
+      }
+      res.json({ message: "Password reset email sent" });
     } else {
       throw new Error("Profile Update Failed");
     }
