@@ -129,7 +129,7 @@ providerSchema.methods.generatePasswordResetToken = async function () {
     .update(resetToken)
     .digest("hex");
   this.auth_details.passwordResetToken = passwordResetTokenEncry;
-  this.auth_details.passwordResetExpiresAt = Date.now() + 30 * 60 * 1000; // Configurable expiration logic can be added here
+  this.auth_details.passwordResetExpiresAt = Date.now() + 5 * 60 * 1000; // Configurable expiration logic can be added here
   return resetToken;
 };
 

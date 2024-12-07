@@ -145,7 +145,7 @@ export const FreelancerForgotPasswordHandler = asyncHandler(
       const resetToken = await user.generatePasswordResetToken();
       await user.save();
       if (user) {
-        const resetURL = `${process.env.FRONT_END_URL}/reset-password/${resetToken}`;
+        const resetURL = `${process.env.FRONT_END_URL}/freelancer/reset-password/${resetToken}`;
         const htmlContent = `
           <p>Hi ${user.name},</p>
           <p>You recently requested to reset your password. Click the link below to reset it. This link will expire in 5 minutes:</p>
