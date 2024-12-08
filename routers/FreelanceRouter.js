@@ -8,7 +8,7 @@ freelancerRouter.post("/create", FreelancerSignup);
 freelancerRouter.post("/login", FreelancerSignin);
 freelancerRouter.put("/update", authFreelancerMiddleware, FreelancerUpdateUser);
 freelancerRouter.post("/forgot-password", FreelancerForgotPasswordHandler);
-freelancerRouter.post("/reset-password", FreelancerPasswordResetHandler);
+freelancerRouter.post("/reset-password/:token", FreelancerPasswordResetHandler);
 freelancerRouter.get("/all-post",freelancerAllPost)
 freelancerRouter.get("/profile",authFreelancerMiddleware,getFreelancerProfile)
 

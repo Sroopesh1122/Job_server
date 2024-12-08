@@ -44,7 +44,7 @@ export const signup = asyncHandler(async (req, res) => {
 
 export const signin = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
- 
+
   if (!email || !password) {
     throw new Error("All Fields Required!!");
   }
@@ -54,12 +54,9 @@ export const signin = asyncHandler(async (req, res) => {
       throw new Error("Account Not found");
     }
 
-
     if (!(await user.isPasswordMatched(password))) {
       throw new Error("Incorrect password");
     }
-
-   
 
     const resdata = {
       userId: user.user_id,
@@ -79,15 +76,15 @@ export const updateUser = asyncHandler(async (req, res) => {
       new: true,
     });
     if (user) {
-      const data={
-        title:"Profile updated",
-        description:"User profile updated successfully",
-        img:"",
-        navigate_link:"/user/profile",
-        receiver:req?.user?.user_id,
-        sender:""
-      }
-      sendNotification(data)
+      const data = {
+        title: "Profile updated",
+        description: "User profile updated successfully",
+        img: "",
+        navigate_link: "/user/profile",
+        receiver: req?.user?.user_id,
+        sender: "",
+      };
+      sendNotification(data);
       res.json(user);
     } else {
       throw new Error("Profile Update Failed");
@@ -96,7 +93,6 @@ export const updateUser = asyncHandler(async (req, res) => {
     throw new Error(error);
   }
 });
-
 
 export const getUser = asyncHandler(async (req, res) => {
   const { _id } = req.user;
@@ -118,7 +114,7 @@ export const getUserById = asyncHandler(async (req, res) => {
 
 export const forgotPasswordHandler = asyncHandler(async (req, res) => {
   const { email } = req.body;
-  
+
   if (!email) {
     throw new Error("Email required!!");
   }
@@ -138,7 +134,7 @@ export const forgotPasswordHandler = asyncHandler(async (req, res) => {
         <p>If you did not request a password reset, please ignore this email or contact support if you have questions.</p>
         <p>Thank you,<br>Emploez.in</p>
       `;
-    
+
       const textContent = `
         Hi ${user.name},
         
@@ -151,15 +147,15 @@ export const forgotPasswordHandler = asyncHandler(async (req, res) => {
         Thank you,
         Emploez.in
       `;
-    
+
       const data = {
         to: email,
-        from: `${process.env.MAIL_ID}`,  // Use a verified and recognizable email address
+        from: `${process.env.MAIL_ID}`, // Use a verified and recognizable email address
         subject: "Password Reset Request",
         text: textContent,
         html: htmlContent,
       };
-    
+
       try {
         await sendMail(data);
       } catch (error) {
@@ -194,15 +190,15 @@ export const passwordResetHandler = asyncHandler(async (req, res) => {
     user.auth_details.passwordResetExpiresAt = undefined;
     await user.save();
     if (user) {
-      const data={
-        title:"Password Reset",
-        description:"Account password Reset Successfully",
-        img:"https://icons.veryicon.com/png/o/miscellaneous/remitting-country-linear-icon/password-148.png",
-        navigate_link:"",
-        receiver:req?.user?.user_id,
-        sender:""
-      }
-      sendNotification(data)
+      const data = {
+        title: "Password Reset",
+        description: "Account password Reset Successfully",
+        img: "https://icons.veryicon.com/png/o/miscellaneous/remitting-country-linear-icon/password-148.png",
+        navigate_link: "",
+        receiver: req?.user?.user_id,
+        sender: "",
+      };
+      sendNotification(data);
       res.json({ user });
     } else {
       throw new Error("Profile Update Failed");
@@ -253,7 +249,9 @@ export const addprojectPost = asyncHandler(async (req, res) => {
     throw new Error("All fields Required");
   }
 
-  const findPost = await ProjectApplicationModal.findOne({project_id:postId});
+  const findPost = await ProjectApplicationModal.findOne({
+    project_id: postId,
+  });
   if (!findPost) {
     throw new Error("Post not found!!");
   }
@@ -264,7 +262,7 @@ export const addprojectPost = asyncHandler(async (req, res) => {
 
   findPost.applied_ids.push(user_id);
   await findPost.save();
-  const user = await userModal.findOne({user_id:user_id});
+  const user = await userModal.findOne({ user_id: user_id });
   user.application_applied_info.projects.push({
     projectId: postId,
   });
@@ -294,15 +292,15 @@ export const followCompany = asyncHandler(async (req, res) => {
   user.follwing.push(company.company_id);
   await user.save();
   await company.save();
-  const data={
-    title:"Following",
-    description:`Started following ${company?.company_name}`,
-    img:company?.img?.url||"",
-    navigate_link:`/user/company/${company?.company_id}`,
-    receiver:req?.user?.user_id,
-    sender:""
-  }
-  sendNotification(data)
+  const data = {
+    title: "Following",
+    description: `Started following ${company?.company_name}`,
+    img: company?.img?.url || "",
+    navigate_link: `/user/company/${company?.company_id}`,
+    receiver: req?.user?.user_id,
+    sender: "",
+  };
+  sendNotification(data);
   return res.json({ success: true });
 });
 
@@ -366,377 +364,283 @@ export const unSaveJobApplication = asyncHandler(async (req, res) => {
   return res.json({ success: true });
 });
 
-
 export const getSavedApplication = asyncHandler(async (req, res) => {
   const { user_id } = req.user;
   const { page = 1, limit = 10 } = req.query;
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
-  const query = [];
+  // const query = [];
 
-  query.push({
-    $match: {
-      user_id: user_id,
+  // query.push({
+  //   $match: {
+  //     user_id: user_id,
+  //   },
+  // });
+
+  // query.push({
+  //   $project: {
+  //     _id: 1,
+  //     name: 1,
+  //     email: 1,
+  //     saved_info: 1,
+  //   },
+  // });
+
+  // query.push({
+  //   $unwind: "$saved_info.jobs",
+  // });
+
+  // query.push({
+  //   $lookup: {
+  //     from: "applications",
+  //     localField: "saved_info.jobs",
+  //     foreignField: "job_id",
+  //     as: "Saved_application_info",
+  //   },
+  // });
+
+  // query.push({
+  //   $unwind: "$Saved_application_info",
+  // });
+
+  // query.push({
+  //   $group: {
+  //     _id: "$_id",
+  //     name: { $first: "$name" },
+  //     email: { $first: "$email" },
+  //     saved_info: { $push: "$Saved_application_info" },
+  //   },
+  // });
+
+
+  // query.push({
+  //   $addFields: {
+  //     pageData: {
+  //       $slice: ["$saved_info", skip, parseInt(limit)],
+  //     },
+  //   },
+  // });
+
+  // query.push({
+  //   $project: {
+  //     saved_info: 0,
+  //   },
+  // });
+
+  // query.push({
+  //   $unwind: "$pageData",
+  // });
+
+  // query.push({
+  //   $project: {
+  //     "pageData.saved_ids": 0,
+  //     "pageData.applied_ids": 0,
+  //   },
+  // });
+
+  // query.push({
+  //   $lookup: {
+  //     from: "providers",
+  //     localField: "pageData.provider_details",
+  //     foreignField: "company_id",
+  //     as: "company",
+  //   },
+  // });
+
+  // query.push({
+  //   $unwind: {
+  //     path: "$company",
+  //     preserveNullAndEmptyArrays: true,
+  //   },
+  // });
+
+  // query.push({
+  //   $project: {
+  //     "company.auth_details": 0,
+  //     "company.job_details": 0,
+  //     "company.project_details": 0,
+  //   },
+  // });
+
+  // const pageData = await userModal.aggregate(query);
+
+  // //Extarcting only application and company Data
+  // const resultData = pageData.map((data) => {
+  //   return {
+  //     saved_app_info: data.pageData,
+  //     companyData: data.company || {},
+  //   };
+  // });
+
+  // const query2 = [];
+
+  // query2.push({
+  //   $match: {
+  //     user_id: user_id,
+  //   },
+  // });
+
+  // query2.push({
+  //   $project: {
+  //     _id: 1,
+  //     name: 1,
+  //     email: 1,
+  //     saved_info: 1,
+  //   },
+  // });
+
+  // query2.push({
+  //   $unwind: "$saved_info.jobs",
+  // });
+
+  // query2.push({
+  //   $lookup: {
+  //     from: "applications",
+  //     localField: "saved_info.jobs",
+  //     foreignField: "job_id",
+  //     as: "Saved_application_info",
+  //   },
+  // });
+
+  // query2.push({
+  //   $unwind: "$Saved_application_info",
+  // });
+  // const totalData = await userModal.aggregate(query2);
+  // return res.json({ totalData: totalData?.length, pageData: resultData });
+
+
+
+  // Remove Deleted Post
+  const filterData = await userModal.aggregate([
+    {
+      $match: { user_id: user_id },
     },
-  });
-
-  query.push({
-    $project:{
-      _id:1,
-      name:1,
-      email:1,
-      saved_info:1
-    }
-  })
-
-  query.push({
-    $unwind:"$saved_info.jobs"
-  })
-
-    query.push({
-    $lookup: {
-      from: "applications",
-      localField: "saved_info.jobs",
-      foreignField: "job_id",
-      as: "Saved_application_info",
-    },
-  });
-
-  query.push({
-    $unwind:"$Saved_application_info"
-  })
-
-  query.push({
-    $group:{
-      _id:"$_id",
-      name:{$first:"$name"},
-      email:{$first:"$email"},
-      saved_info:{$push:"$saved_info.jobs"}
-    }
-  })
-
-  query.push({
-    $project:{
-      _id:1,
-      name:1,
-      email:1,
-      saved_info : {$reverseArray: "$saved_info"}
-    }
-  })
-
-
-  query.push({
-    $addFields: {
-      pageData: {
-        $slice: ["$saved_info", skip, parseInt(limit)],
+    {
+      $unwind: {
+        path: "$saved_info.jobs",
+        preserveNullAndEmptyArrays: true,
       },
     },
-  });
-
-
-  query.push({
-    $unwind:"$pageData"
-  })
-
-
-
-  query.push({
-    $lookup: {
-      from: "applications",
-      localField: "pageData",
-      foreignField: "job_id",
-      as: "Saved_application_info",
+    {
+      $lookup: {
+        from: "applications",
+        localField: "saved_info.jobs",
+        foreignField: "job_id",
+        as: "jobDetails",
+      },
     },
-  });
 
-  query.push({
-    $unwind: {
-      path: "$Saved_application_info",
+    {
+      $match: {
+        jobDetails: { $ne: [] },
+      },
     },
-  });
 
-  query.push({
-    $project: {
-      "Saved_application_info.applied_ids": 0,
+    {
+      $group: {
+        _id: "$_id",
+        filteredJobs: { $push: "$saved_info.jobs" },
+      },
     },
-  });
+  ]);
 
-  query.push({
-    $lookup: {
-      from: "providers",
-      localField: "Saved_application_info.provider_details",
-      foreignField: "company_id",
-      as: "company",
-    },
-  });
+  const userData = await userModal.findOneAndUpdate(
+    { user_id: user_id },
+    { "saved_info.jobs": filterData[0].filteredJobs },{new:true}
+  );
 
-  query.push({
-    $unwind: {
-      path: "$company",
-    },
-  });
+  const totalData = userData.saved_info.jobs.length
 
-  query.push({
-    $project: {
-      "company.auth_details": 0,
-      "company.job_details": 0,
-      "company.project_details": 0,
-    },
-  });
+   const pageDataIds =  userData.saved_info.jobs.slice(skip,parseInt(page)*parseInt(limit))
 
+   const savedApplicationData = []
 
-  query.push({
-    $addFields: {
-      "Saved_application_info.companyData": "$company",
-    },
-  });
+   for(const jobIds of pageDataIds)
+   {
+      const jobData = await jobApplicationModal.findOne({job_id:jobIds})
+      if(jobData)
+      {
+        const companyData = await providerModal.findOne({company_id:jobData.provider_details})
+        if(companyData)
+        {
+          savedApplicationData.push({saved_app_info:jobData , companyData:companyData})
+        }else{
+          savedApplicationData.push({saved_app_info:jobData , companyData:{}})
+        }
+      }
+   }
+return res.json({ totalData: totalData, pageData: savedApplicationData });
 
 
-  
-
-  query.push({
-    $group: {
-      _id: "$_id",
-      Saved_application_info:{$push:"$Saved_application_info"}
-    },
-  });
-
-  query.push({
-    $project:{
-      "_id":0
-    }
-  })
-
-  
-  const pageData = await userModal.aggregate(query);
-
-
-  const query2 = []
-
-  query2.push({
-    $match: {
-      user_id: user_id,
-    },
-  });
-
-  query2.push({
-    $project:{
-      _id:1,
-      name:1,
-      email:1,
-      saved_info:1
-    }
-  })
-
-  query2.push({
-    $unwind:"$saved_info.jobs"
-  })
-
-    query2.push({
-    $lookup: {
-      from: "applications",
-      localField: "saved_info.jobs",
-      foreignField: "job_id",
-      as: "Saved_application_info",
-    },
-  });
-
-  query2.push({
-    $unwind:"$Saved_application_info"
-  })
-
-
-
-  const totalData = await userModal.aggregate(query2);
-
-   
-  return res.json({ totalData : totalData?.length, pageData:pageData[0]?.Saved_application_info})
 });
 
 export const getAppliedApplication = asyncHandler(async (req, res) => {
   const { user_id } = req.user;
-let { page = 1, limit = 10 } = req.query;
+  let { page = 1, limit = 10 } = req.query;
 
+  const skip = (parseInt(page) - 1) * parseInt(limit);
 
-const skip = (parseInt(page) - 1) * parseInt(limit);
-
-
-console.log(skip,limit)
-
-const query = [];
-
-query.push({
-  $match: {
-    user_id: user_id,
-  },
-});
-
-query.push({
-  $unwind : "$application_applied_info.jobs"
-})
-
-
-query.push({
-  $lookup: {
-    from: "applications",
-    localField: "application_applied_info.jobs.jobId",
-    foreignField: "job_id",
-    as: "Applied_application_info_data",
-  },
-});
-
-
-query.push({
-  $unwind : "$Applied_application_info_data"
-})
-
-
-query.push({
-  $group:{
-    _id:"$_id",
-    name:{$first:"$name"},
-    email:{$first:"$email"},
-    application_applied_info:{$push:"$application_applied_info.jobs"}
-  }
-})
-
-
-
-query.push({
-  $unwind : "$application_applied_info"
-})
-
-
-
-
-query.push({
-  $sort:{"application_applied_info.appliedDate":-1}
-})
-
-query.push({
-  $group:{
-        _id: "$_id", // Re-group back to user with sorted jobs
-    name: { $first: "$name" },
-    email: { $first: "$email" },
-    jobs: { $push: "$application_applied_info"}, 
-  }
-})
-
-query.push({
-  $addFields: {
-    pageData: {
-      $slice: ["$jobs", skip, parseInt(limit)], // Paginate jobs
+  //Removing deleted Post
+  const filterData = await userModal.aggregate([
+    {
+      $match: { user_id: user_id },
     },
-  },
-});
+    {
+      $unwind: {
+        path: "$application_applied_info.jobs",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "applications",
+        localField: "application_applied_info.jobs.jobId",
+        foreignField: "job_id",
+        as: "jobDetails",
+      },
+    },
 
+    {
+      $match: {
+        jobDetails: { $ne: [] },
+      },
+    },
 
-query.push({
-  $project:{
-    _id:1,
-    name:1,
-    pageData:1
-  }
-})
+    {
+      $group: {
+        _id: "$_id",
+        filteredJobs: { $push: "$application_applied_info.jobs" },
+      },
+    },
+  ]);
 
-query.push({$unwind : "$pageData"})
+  const userData = await userModal.findOneAndUpdate(
+    { user_id: user_id },
+    { "application_applied_info.jobs": filterData[0].filteredJobs },{new:true}
+  );
 
-query.push({
-  $lookup: {
-    from: "applications",
-    localField: "pageData.jobId",
-    foreignField: "job_id",
-    as: "Applied_application_info_pageData",
-  },
-});
+  const totalData = userData.application_applied_info.jobs?.length;
 
-query.push({$unwind : "$Applied_application_info_pageData"})
+   const pageData =  userData.application_applied_info.jobs.slice(skip,parseInt(page)*parseInt(limit))
 
-query.push({
-  $addFields: {
-    "pageData.jobData":"$Applied_application_info_pageData" ,
-  },
-});
+   const appliedData = []
 
-query.push({
-  $lookup: {
-    from: "providers",
-    localField: "Applied_application_info_pageData.provider_details",
-    foreignField: "company_id",
-    as: "company",
-  },
-});
-
-query.push({$unwind : "$company"})
-
-query.push({
-  $project:{
-    "company.auth_details":0,
-    "company.job_details":0,
-    "company.project_details":0
-  }
-})
-
-query.push({
-  $addFields: {
-    "pageData.companyData":"$company" ,
-  },
-});
-
-query.push({
-  $group:{
-        _id: "$_id", // Re-group back to user with sorted jobs
-    name: { $first: "$name" },
-    pageData: { $push: "$pageData"}, 
-  }
-})
- 
-  const pageData = await userModal.aggregate(query);
-
-
-  //To get Total No of AppliedDatas
-
- const query2=[]
-
-  
-query2.push({
-  $match: {
-    user_id: user_id,
-  },
-});
-
-query2.push({
-  $unwind : "$application_applied_info.jobs"
-})
-
-query2.push({
-  $lookup: {
-    from: "applications",
-    localField: "application_applied_info.jobs.jobId",
-    foreignField: "job_id",
-    as: "Applied_application_info_pageData",
-  },
-});
-
-query2.push({
-  $unwind : "$Applied_application_info_pageData"
-})
-
-
-query2.push({
-  $group:{
-    _id:"$_id",
-    datas:{$push:"$Applied_application_info_pageData"}
-  }
-})
-
-
-const totalData = await userModal.aggregate(query2);
-  return res.json({
-    totalData: totalData[0].datas?.length || 0,
-    pageData: pageData[0]?.pageData
-  });
+   for(const data of pageData)
+   {
+      const jobData = await jobApplicationModal.findOne({job_id:data.jobId})
+      if(jobData)
+      {
+        const companyData = await providerModal.findOne({company_id:jobData.provider_details})
+        if(companyData)
+        {
+          appliedData.push({jobData:jobData , companyData:companyData})
+        }else{
+          appliedData.push({jobData:jobData , companyData:{}})
+        }
+      }
+   }
+   res.json({totalData:totalData ,pageData:appliedData})
 });
 
 export const getFollowingCompanies = asyncHandler(async (req, res) => {
@@ -754,19 +658,19 @@ export const getFollowingCompanies = asyncHandler(async (req, res) => {
   });
 
   query.push({
-    $project:{
-      _id:1,
-      name:1,
-      email:1,
-      follwing:1
-    }
-  })
+    $project: {
+      _id: 1,
+      name: 1,
+      email: 1,
+      follwing: 1,
+    },
+  });
 
   query.push({
-    $unwind:"$follwing"
-  })
+    $unwind: "$follwing",
+  });
 
-    query.push({
+  query.push({
     $lookup: {
       from: "providers",
       localField: "follwing",
@@ -776,8 +680,8 @@ export const getFollowingCompanies = asyncHandler(async (req, res) => {
   });
 
   query.push({
-    $unwind:"$company"
-  })
+    $unwind: "$company",
+  });
 
   query.push({
     $project: {
@@ -786,23 +690,22 @@ export const getFollowingCompanies = asyncHandler(async (req, res) => {
   });
 
   query.push({
-    $group:{
-      _id:"$_id",
-      name:{$first:"$name"},
-      email:{$first:"$email"},
-      companies:{$push:"$company"}
-    }
-  })
+    $group: {
+      _id: "$_id",
+      name: { $first: "$name" },
+      email: { $first: "$email" },
+      companies: { $push: "$company" },
+    },
+  });
 
   query.push({
-    $project:{
-      _id:1,
-      name:1,
-      email:1,
-      companies : {$reverseArray: "$companies"}
-    }
-  })
-
+    $project: {
+      _id: 1,
+      name: 1,
+      email: 1,
+      companies: { $reverseArray: "$companies" },
+    },
+  });
 
   query.push({
     $addFields: {
@@ -812,36 +715,30 @@ export const getFollowingCompanies = asyncHandler(async (req, res) => {
     },
   });
 
+  query.push({
+    $unwind: "$pageData",
+  });
 
   query.push({
-    $unwind:"$pageData"
-  })
+    $group: {
+      _id: "$_id",
+      companiesData: { $push: "$pageData" },
+    },
+  });
 
   query.push({
-    $group:{
-      _id:"$_id",
-      companiesData : {$push:"$pageData"}
-    }
-  })
+    $unwind: "$companiesData",
+  });
 
   query.push({
-    $unwind:"$companiesData"
-  })
+    $project: {
+      _id: 0,
+    },
+  });
 
-  query.push({
-    $project:{
-      _id:0
-    }
-  })
-
-
-
-
-  
   const pageData = await userModal.aggregate(query);
 
-
-  const query2 = []
+  const query2 = [];
 
   query2.push({
     $match: {
@@ -850,17 +747,17 @@ export const getFollowingCompanies = asyncHandler(async (req, res) => {
   });
 
   query2.push({
-    $project:{
-      _id:1,
-      name:1,
-      email:1,
-      follwing:1
-    }
-  })
+    $project: {
+      _id: 1,
+      name: 1,
+      email: 1,
+      follwing: 1,
+    },
+  });
 
   query2.push({
-    $unwind:"$follwing"
-  })
+    $unwind: "$follwing",
+  });
 
   query2.push({
     $lookup: {
@@ -872,8 +769,8 @@ export const getFollowingCompanies = asyncHandler(async (req, res) => {
   });
 
   query2.push({
-    $unwind:"$company"
-  })
+    $unwind: "$company",
+  });
 
   query2.push({
     $project: {
@@ -884,18 +781,18 @@ export const getFollowingCompanies = asyncHandler(async (req, res) => {
   });
 
   query2.push({
-    $group:{
-      _id:"$_id",
-      name:{$first:"$name"},
-      email:{$first:"$email"},
-      companies:{$push:"$company"}
-    }
-  })
-  
+    $group: {
+      _id: "$_id",
+      name: { $first: "$name" },
+      email: { $first: "$email" },
+      companies: { $push: "$company" },
+    },
+  });
+
   const totalData = await userModal.aggregate(query2);
 
-  return res.json({ totalData : totalData[0]?.companies?.length || 0, pageData:pageData || []})
+  return res.json({
+    totalData: totalData[0]?.companies?.length || 0,
+    pageData: pageData || [],
+  });
 });
-
-
-

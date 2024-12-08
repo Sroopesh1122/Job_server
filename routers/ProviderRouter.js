@@ -26,7 +26,7 @@ providerRouter.put(
   changeJobApplicationStatus
 );
 providerRouter.post("/forgot-password", ProviderForgotPasswordHandler);
-providerRouter.post("/reset-password", ProviderPasswordResetHandler);
+providerRouter.post("/reset-password/:token", ProviderPasswordResetHandler);
 providerRouter.get("/profile", authProviderMiddleware, providerGetProfile);
 providerRouter.get("/allcompany",getAllProviders)
 providerRouter.get("/searchCompany/:q",getCompanyTitles)
