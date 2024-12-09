@@ -1,7 +1,6 @@
 import { Router } from "express";
-import { addJobPost, addprojectPost,  followCompany,  forgotPasswordHandler, getAppliedApplication,  getFollowingCompanies,  getSavedApplication , getUser, getUserById, passwordResetHandler, saveJobApplication, signin, signup, unfollowCompany, unSaveJobApplication, updateUser } from "../controllers/UserController.js";
+import { addJobPost, addprojectPost,  followCompany,  forgotPasswordHandler, getAppliedApplication,  getFollowingCompanies,  getSavedApplication , getUser, getUserById, passwordResetHandler, saveJobApplication, sendUserOtp, signin, signup, unfollowCompany, unSaveJobApplication, updateUser, verifyUserOtp } from "../controllers/UserController.js";
 import {  authUserMiddleware, waitMiddleware } from "../middlewares/AuthHandler.js";
-
 
 export const UserRouter = Router();
 
@@ -24,3 +23,6 @@ UserRouter.post("/job/unsave",authUserMiddleware,unSaveJobApplication);
 UserRouter.post("/project/apply",authUserMiddleware,addprojectPost)
 UserRouter.post("/company/follow",authUserMiddleware,followCompany)
 UserRouter.post("/company/unfollow",authUserMiddleware,unfollowCompany)
+
+UserRouter.post("/send-otp", sendUserOtp)
+UserRouter.post("/verify-otp", verifyUserOtp)

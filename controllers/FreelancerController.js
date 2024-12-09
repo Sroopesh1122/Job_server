@@ -6,6 +6,7 @@ import { sendMail } from "../utils/MailSender.js";
 import otpGenerator from "otp-generator";
 
 const otpStore = new Map();
+const OTP_EXPIRES_AT = 5 * 60 * 1000;
 
 export const sendFreelancerOTP = asyncHandler(async(req, res) => {
   const { email } = req.body;  
@@ -24,7 +25,10 @@ export const sendFreelancerOTP = asyncHandler(async(req, res) => {
     specialChars: false,
   });
 
-  otpStore.set(email, otp);
+  otpStore.set(email, {
+    otp: otp,
+    expiresAt: Date.now() + OTP_EXPIRES_AT,
+  });
 
   await sendMail({
     from: process.env.MAIL_ID,
@@ -43,12 +47,25 @@ export const verifyFreelancerOTP = asyncHandler(async(req, res) => {
   if(!email || !otp) {
     throw new Error("Email and OTP are required!");
   }
-  const validOtp = otpStore.get(email);
-  if(validOtp && validOtp === otp) {
+
+  const otpStoredPreviously = otpStore.get(email);
+
+  if(!otpStoredPreviously) {
+    throw new Error("OTP has expired");
+  }
+  
+  const { otp: validOtp, expiresAt } = otpStoredPreviously;
+
+  if(Date.now() > expiresAt) {
+    otpStore.delete(email);
+    throw new Error("OTP has expired");
+  }
+
+  if(validOtp === otp) {
     otpStore.delete(email);
     res.json({ message: "OTP verified successfully!" });
   } else {
-    throw new Error("Invalid or Expired OTP!");
+    throw new Error("Invalid OTP!");
   }
 });
 

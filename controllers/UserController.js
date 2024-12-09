@@ -7,6 +7,71 @@ import { ProjectApplicationModal } from "../modals/ProjectApplication.js";
 import { sendMail } from "../utils/MailSender.js";
 import { providerModal } from "../modals/JobProvider.js";
 import { sendNotification } from "../utils/NotificationSender.js";
+import otpGenerator from "otp-generator";
+
+const otpStore = new Map();
+const OTP_EXPIRES_AT = 5 * 60 * 1000;
+
+export const sendUserOtp = asyncHandler(async(req, res) => {
+  const { email } = req.body;
+
+  if(!email) {
+    throw new Error("Email is required!");
+  }
+
+  const userExists = await userModal.findOne({ email });
+  if(userExists) {
+    throw new Error("Email already registered.");
+  }
+
+  const otp = otpGenerator.generate(6, {
+    uppercase: false,
+    specialChars: false,
+  });
+
+  otpStore.set(email, {
+    otp: otp,
+    expiresAt: Date.now() + OTP_EXPIRES_AT,
+  });  
+
+  await sendMail({
+    from: process.env.MAIL_ID,
+    to: email,
+    subject: "Your OTP for Signup",
+    text: `Your OTP is ${otp}. It is valid for 5 minutes.`,
+    html: `<p>Your OTP is <strong>${otp}</strong>. It is valid for 5 minutes.</p>`,
+  });
+
+  res.json({ message: "OTP sent successfully!" });
+});
+
+export const verifyUserOtp = asyncHandler(async(req, res) => {
+  const { email, otp } = req.body;  
+
+  if(!email || !otp) {
+    throw new Error("Email and OTP are required!");
+  }
+
+  const otpStoredPreviously = otpStore.get(email);
+
+  if(!otpStoredPreviously) {
+    throw new Error("OTP has expired");
+  }
+
+  const { otp: validOtp, expiresAt } = otpStoredPreviously;
+
+  if(Date.now() > expiresAt) {
+    otpStore.delete(email);
+    throw new Error("OTP has expired");
+  }
+
+  if(validOtp === otp) {
+    otpStore.delete(email);
+    res.json({ message: "OTP verified successfully!" });
+  } else {
+    throw new Error("Invalid OTP!");
+  }
+});
 
 export const signup = asyncHandler(async (req, res) => {
   const { email, password, name } = req.body;
