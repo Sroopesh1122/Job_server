@@ -6,7 +6,9 @@ import { sendMail } from "../utils/MailSender.js";
 import otpGenerator from "otp-generator";
 
 const otpStore = new Map();
-const OTP_EXPIRES_AT = 5 * 60 * 1000;
+const OTP_EXPIRES_AT = 1 * 60 * 1000;
+const MAX_TRIES = 3;
+const COOLING_PERIOD = 5 * 60 * 1000;
 
 export const sendFreelancerOTP = asyncHandler(async(req, res) => {
   const { email } = req.body;  
@@ -20,6 +22,26 @@ export const sendFreelancerOTP = asyncHandler(async(req, res) => {
     throw new Error("Email already registered.");
   }
 
+  let otpData = otpStore.get(email);
+
+  if (otpData) {
+    const {tries, lastAttemptMade} = otpData;
+
+    if (tries >= MAX_TRIES) {
+      const timeSinceLastAttempt = Date.now() - lastAttemptMade;
+      if(timeSinceLastAttempt < COOLING_PERIOD) {
+        const timeLeft = Math.ceil((COOLING_PERIOD - timeSinceLastAttempt) / 1000);
+        return res.status(400).json({
+          message: `You have exceeded the maximum number of attempts. Please try again in ${
+            timeLeft > 60 ? Math.ceil(timeLeft / 60) : timeLeft
+          } ${timeLeft > 60 ? 'minute' : 'seconds'}${timeLeft > 60 && Math.ceil(timeLeft / 60) > 1 ? 's' : ''}.`,
+        });              
+      } else {
+        otpStore.set(email, { tries: 0, lastAttemptMade: Date.now() });
+      }
+    }
+  }
+
   const otp = otpGenerator.generate(6, {
     uppercase: false,
     specialChars: false,
@@ -28,17 +50,26 @@ export const sendFreelancerOTP = asyncHandler(async(req, res) => {
   otpStore.set(email, {
     otp: otp,
     expiresAt: Date.now() + OTP_EXPIRES_AT,
+    tries: otpData? otpData.tries + 1 : 1,
+    lastAttemptMade: Date.now(),
   });
 
   await sendMail({
     from: process.env.MAIL_ID,
     to: email,
     subject: "Your OTP for Signup",
-    text: `Your OTP is ${otp}. It is valid for 5 minutes.`,
-    html: `<p>Your OTP is <strong>${otp}</strong>. It is valid for 5 minutes.</p>`,
+    text: `Your OTP is ${otp}. It is valid for 1 minute.`,
+    html: `<p>Your OTP is <strong>${otp}</strong>. It is valid for 1 minute.</p>`,
   });
 
-  res.json({ message: "OTP sent successfully!" });
+  const updatedOTPData = otpStore.get(email);
+
+  const triesLeft = MAX_TRIES - updatedOTPData.tries;  
+
+  res.json({
+    message: "OTP sent successfully!",
+    triesLeft,
+   });
 });
 
 export const verifyFreelancerOTP = asyncHandler(async(req, res) => {
