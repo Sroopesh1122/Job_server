@@ -14,11 +14,42 @@ export const sendMail =asyncHandler(async (data,req,res)=>{
       });
       
         const info = await transporter.sendMail({
-          from: `"Emploez.in" <${data.from}>` , // sender address
-          to: data.to, // list of receivers
-          subject: data.subject, // Subject line
-          text: data.text, // plain text body
-          html: data.html, // html body
+          from: `"Emploez.in" <${data.from}>` , 
+          to: data.to, 
+          subject: data.subject, 
+          text: data.text, 
+          html: data.html, 
+        });
+      
+        console.log("Message sent: %s", info.messageId);
+      
+    } catch (error) {
+      
+      throw new Error(error)
+    }
+  
+  })
+
+  export const sendMailInGroup =asyncHandler(async (data,req,res)=>{
+    try {
+      const transporter = nodeMailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
+        auth: {
+          user: process.env.MAIL_ID,
+          pass: process.env.MAIL_PASSWORD,
+        },
+      });
+      
+        const info = await transporter.sendMail({
+          from: `"Emploez.in" <${data.from}>` , 
+          to: data.to, 
+          cc:data.cc,
+          bcc:data.bcc,
+          subject: data.subject, 
+          text: data.text, 
+          html: data.html, 
         });
       
         console.log("Message sent: %s", info.messageId);

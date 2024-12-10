@@ -69,6 +69,7 @@ const applicationSchema = new mongoose.Schema({
     status: [{ type: String }]
   }],
   saved_ids: [{ type: String }],
+  shortlist:[{ type:String }],
   postedBy: {
     type: String,
     default: "admin"

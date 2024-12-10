@@ -2,9 +2,9 @@ import asyncHandler from "express-async-handler";
 import { jobApplicationModal } from "../modals/JobApplication.js";
 import { providerModal } from "../modals/JobProvider.js";
 import { jobCategories } from "../assets/Jobs.js";
-import { query } from "express";
 import { sendNotification } from "../utils/NotificationSender.js";
-
+import UserModal from "../modals/User.js"
+import { sendMail, sendMailInGroup } from "../utils/MailSender.js";
 
 export const createJobPost = asyncHandler(async (req, res) => {
   const {
@@ -487,7 +487,7 @@ export const updateApplicationStatus = asyncHandler(async (req, res) => {
     "Profile Viewed",
     "Contact Viewed",
     "Resume Viewed",
-    "Interested",
+    "Shortlisted",
   ];
 
   if (!applicationId || !status || !user_Id) {
@@ -562,3 +562,168 @@ const sendPostAddedNotification = async({sendData={} ,followersList=[]})=>{
     sendNotification(sendData)
   })
 }
+
+
+export const addToShortList = asyncHandler(async (req, res) => {
+  const { userId, postId } = req.body;
+
+  if (!userId || !postId) {
+    throw new Error("All fields are required!");
+  }
+
+  const jobPost = await jobApplicationModal.findOne({ job_id: postId });
+  if (!jobPost) {
+    throw new Error("Post not found!");
+  }
+
+  const user = await UserModal.findOne({ user_id: userId });
+  if (!user) {
+    throw new Error("User not found!");
+  }
+
+  if (!jobPost.shortlist.includes(userId)) {
+    jobPost.shortlist.push(userId);
+    await jobPost.save();
+    return res.json({
+      success: true,
+      message: "Added to shortlist",
+      updatedList: jobPost.shortlist,
+    });
+  } else {
+    throw new Error("User has already been shortlisted");
+  }
+});
+
+
+
+export const removeFromShortList = asyncHandler(async (req, res) => {
+  const { userId, postId } = req.query;
+
+  if (!userId || !postId) {
+    throw new Error("All fields are required!");
+  }
+
+  const jobPost = await jobApplicationModal.findOne({ job_id: postId });
+  if (!jobPost) {
+    throw new Error("Post not found!");
+  }
+
+  const user = await UserModal.findOne({ user_id: userId });
+  if (!user) {
+    throw new Error("User not found!");
+  }
+
+  if (jobPost.shortlist.includes(userId)) {
+    jobPost.shortlist = jobPost.shortlist.filter((id) => id !== userId);
+    await jobPost.save();
+    return res.json({
+      success: true,
+      message: "Removed from shortlist",
+      updatedList: jobPost.shortlist,
+    });
+  } else {
+    throw new Error("User ID not found in shortlist");
+  }
+});
+
+
+
+export const getPostShortList = asyncHandler(async (req, res) => {
+  const { postId, page = 1, limit = 10 } = req.query;
+
+  if (!postId) {
+    throw new Error("Post ID is required!");
+  }
+
+  const jobPost = await jobApplicationModal.findOne({ job_id: postId });
+  if (!jobPost) {
+    throw new Error("Post not found!");
+  }
+
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const pagedArray = jobPost.shortlist.slice(skip, skip + parseInt(limit));
+
+  const resultData = await Promise.all(
+    pagedArray.map((userId) =>
+      UserModal.findOne(
+        { user_id: userId },
+        { auth_details: 0, saved_info: 0, application_applied_info: 0 }
+      )
+    )
+  );
+
+  if (resultData.length === 0) {
+    throw new Error("No users found in the shortlist!");
+  }
+
+  res.json({
+    success: true,
+    pageData: resultData.filter(Boolean), // Filter out null results
+    totalData: jobPost.shortlist.length,
+  });
+});
+
+
+export const sendEmailToAllShortlist = asyncHandler(async(req,res)=>{
+  const {postId} = req.body;
+
+  if(!postId)
+  {
+    throw new Error("PostId Required");
+  }
+  const jobPost = await jobApplicationModal.findOne({job_id :postId});
+  if(!jobPost)
+  {
+    throw new Error("Post Not Found");
+  }
+
+  const provider =  await providerModal.findOne({company_id:jobPost.provider_details})
+
+  let applicants = [];
+
+for (const userId of jobPost.shortlist) {
+  const user = await UserModal.findOne({ user_id: userId });
+  if (user && user.email) {
+    applicants.push(user.email); 
+  }
+}
+applicants = applicants.join(",");
+
+  const mailData = {
+    from: `"${provider.company_name}" <${process.env.MAIL_ID}>`,
+    to: provider.email, 
+    bcc: applicants,
+    subject: "Congratulations! You've Been Shortlisted",
+    text: `Dear Applicant,
+  
+  We are excited to inform you that you have been shortlisted for a position at ${provider.company_name}.
+  
+  Our team was impressed by your application, and we believe you could be a great fit for the opportunities we offer. 
+  
+  Please check your email regularly for the next steps in the recruitment process. If you have any questions, feel free to contact us at ${provider.contact_email}.
+  
+  Best regards,
+  ${provider.company_name} Recruitment Team
+  
+  Note: This email was sent to applicants who have applied to our job postings. If you believe this email was sent to you in error, please let us know.`,
+  
+    html: `
+      <p>Dear Applicant,</p>
+      <p>We are excited to inform you that you have been shortlisted for a position at <strong>${provider.company_name}</strong>.</p>
+      <p>Our team was impressed by your application, and we believe you could be a great fit for the opportunities we offer.</p>
+      <p>Please check your email regularly for the next steps in the recruitment process. If you have any questions, feel free to contact us at <a href="mailto:${provider.contact_email}">${provider.contact_email}</a>.</p>
+      <p>Best regards,</p>
+      <p><strong>${provider.company_name} Recruitment Team</strong></p>
+      <hr>
+      <small>Note: This email was sent to applicants who have applied to our job postings. If you believe this email was sent to you in error, please let us know.</small>
+    `,
+  };
+  
+
+ await  sendMailInGroup(mailData)
+ 
+ return res.json({success:true,message:"Email send to all"})
+
+})
+
+
