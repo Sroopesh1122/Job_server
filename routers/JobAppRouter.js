@@ -1,13 +1,16 @@
 import { Router } from "express";
 import { authProviderMiddleware, getProfileMiddleware, waitMiddleware } from "../middlewares/AuthHandler.js";
 import {
+  addToShortList,
   createJobPost,
   deleteJobPost,
   getAllCategoriesAndSubCategories,
   getAllJobPost,
   getApplicationStatus,
   getJobPost,
+  getPostShortList,
   getSuggestedJobs,
+  removeFromShortList,
   updateApplicationStatus,
 } from "../controllers/JobAppController.js";
 import { postData } from "../assets/dummyData.js";
@@ -23,6 +26,7 @@ JobAppRouter.post("/user/status",getApplicationStatus)
 JobAppRouter.put("/status/change",authProviderMiddleware,updateApplicationStatus)
 JobAppRouter.get("/:id", getJobPost);
 
+
 //remove it later 
 JobAppRouter.get("/sample/jobs", async (req, res) => {
   const { page } = req.query;
@@ -35,5 +39,13 @@ JobAppRouter.get("/sample/jobs", async (req, res) => {
     res.json({length : postData.length , pageData});
   }, 5000);
 });
+
 JobAppRouter.get("/", getProfileMiddleware,getAllJobPost);
+
+//For  Appplication Shortlist
+
+
+JobAppRouter.post("/post/shortlist/add",authProviderMiddleware,addToShortList)
+JobAppRouter.delete("/post.shortlist/delete",authProviderMiddleware,removeFromShortList)
+JobAppRouter.get("/post/shortlist",authProviderMiddleware,getPostShortList)
 
