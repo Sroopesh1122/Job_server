@@ -138,7 +138,15 @@ const userSchema = new mongoose.Schema(
         },
       ],
     },
-    follwing:[{type:String}]
+    follwing:[{type:String}],
+    isBlocked:{
+      type:Boolean,
+      default:false
+    },
+    lastActive:{
+      type:Date,
+      default:new Date(),
+    }
   },
   { timestamps: true }
 );

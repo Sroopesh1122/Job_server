@@ -196,6 +196,8 @@ export const getUser = asyncHandler(async (req, res) => {
   if (!findUser) {
     throw new Error("User Not Found");
   }
+  findUser.lastActive = new Date();
+  await findUser.save()
   return res.json(findUser);
 });
 
@@ -892,3 +894,16 @@ export const getFollowingCompanies = asyncHandler(async (req, res) => {
     pageData: pageData || [],
   });
 });
+
+export const getAllUsers = async(page=1,limit=10,filter={})=>{
+
+  const skip = (page-1)*limit
+
+  const [users, totalUsers] = await Promise.all([
+    userModal.find(filter, { auth_details: 0 }).skip(skip).limit(limit) || [],
+    userModal.countDocuments(filter),
+  ]);
+
+  return {totalUsers,users};
+
+}

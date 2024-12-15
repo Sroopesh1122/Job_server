@@ -23,6 +23,5 @@ UserRouter.post("/job/unsave",authUserMiddleware,unSaveJobApplication);
 UserRouter.post("/project/apply",authUserMiddleware,addprojectPost)
 UserRouter.post("/company/follow",authUserMiddleware,followCompany)
 UserRouter.post("/company/unfollow",authUserMiddleware,unfollowCompany)
-
 UserRouter.post("/send-otp", sendUserOtp)
 UserRouter.post("/verify-otp", verifyUserOtp)

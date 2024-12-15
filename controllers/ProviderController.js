@@ -416,3 +416,17 @@ export const changeJobApplicationStatus = asyncHandler(async(req,res)=>{
     throw new Error("Applicant not found")
   }
 })
+
+export const getAllProvidersAccount = async(page=1,limit=10,filter={})=>{
+
+  const skip = (page-1)*limit
+
+  const [users, totalUsers] = await Promise.all([
+    providerModal.find(filter, { auth_details: 0 }).skip(skip).limit(limit) || [],
+    providerModal.countDocuments(filter),
+  ]);
+
+  return {totalUsers,users};
+
+}
+

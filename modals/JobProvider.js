@@ -79,7 +79,11 @@ const providerSchema = new mongoose.Schema(
     },
     followers:[{
       type:String
-    }]
+    }],
+    isBlocked:{
+      type:Boolean,
+      default:false
+    }
   },
   { timestamps: true }
 );

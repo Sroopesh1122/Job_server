@@ -49,5 +49,4 @@ JobAppRouter.get("/", getProfileMiddleware,getAllJobPost);
 JobAppRouter.post("/post/shortlist/add",authProviderMiddleware,addToShortList)
 JobAppRouter.delete("/post.shortlist/delete",authProviderMiddleware,removeFromShortList)
 JobAppRouter.get("/post/shortlist",authProviderMiddleware,getPostShortList)
-JobAppRouter.post("/post/shortlist/send-mail",authProviderMiddleware,sendEmailToAllShortlist)
-
+JobAppRouter.post("/post/sendEmail",authProviderMiddleware ,sendEmailToAllShortlist)
