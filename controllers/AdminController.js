@@ -1,10 +1,10 @@
 import asyncHandler from "express-async-handler";
-import { jobApplicationModal } from "../modals/JobApplication";
-import { providerModal } from "../modals/JobProvider";
+import { jobApplicationModal } from "../modals/JobApplication.js";
+import { providerModal } from "../modals/JobProvider.js";
 import UserModal from "../modals/User.js";
 import { ReportModal } from "../modals/Reports.js";
 import { freelancerModel } from "../modals/Freelancer.js";
-import { ProjectApplicationModal } from "../modals/ProjectApplication";
+import { ProjectApplicationModal } from "../modals/ProjectApplication.js";
 import { getAllUsers } from "./UserController.js";
 import { getAllProvidersAccount } from "./ProviderController.js";
 import { getAllFreelancerAccount } from "./FreelancerController.js";
@@ -196,61 +196,94 @@ export const getActiveUserCount = asyncHandler(async (req, res) => {
   return res.json(resData);
 });
 
+
+export const getAllUsersCount = asyncHandler(async(req,res)=>{
+ let data={}
+  try {
+    const [
+      UsersCount,
+      ProviderCount,
+      FreelancerCount,
+      PostCount,
+      ProjectCount
+    ] = await Promise.all([
+      UserModal.countDocuments(),
+      providerModal.countDocuments(),
+      freelancerModel.countDocuments(),
+      jobApplicationModal.countDocuments(),
+      ProjectApplicationModal.countDocuments()
+    ]);
+
+    data = {
+      
+        UsersCount,
+        ProviderCount,
+        FreelancerCount,
+        PostCount,
+        ProjectCount
+    };
+    
+  } catch (error) {
+    console.error(`Error fetching data for ${formattedDate}:`, error);
+  }
+  return res.json(data)
+})
+
 const getRegisteredStatistics = async (days = 7) => {
   const data = [];
 
   for (let i = 0; i < days; i++) {
     const today = new Date();
-    const startOfDay = new Date(today);
-    startOfDay.setDate(today.getDate() - i);
-    startOfDay.setHours(0, 0, 0, 0);
+    
+    const startOfDay = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i, 0, 0, 0, 0));
+    const endOfDay = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i, 23, 59, 59, 999));
 
-    const endOfDay = new Date(today);
-    endOfDay.setDate(today.getDate() - i);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    const formattedDate = `${startOfDay
-      .getDate()
-      .toString()
-      .padStart(2, "0")}/${(startOfDay.getMonth() + 1)
-      .toString()
-      .padStart(2, "0")}/${startOfDay.getFullYear()}`;
+    const formattedDate = `${startOfDay.getUTCDate().toString().padStart(2, "0")}/${(startOfDay.getUTCMonth() + 1).toString().padStart(2, "0")}/${startOfDay.getUTCFullYear()}`;
 
     try {
-      const registeredUsersCount = await UserModal.countDocuments({
-        createdAt: { $gte: startOfDay, $lt: endOfDay },
-      });
+      const [
+        registeredUsersCount,
+        registeredProviderCount,
+        registeredFreelancerCount,
+        registeredPostCount,
+        registeredProjectCount
+      ] = await Promise.all([
+        UserModal.countDocuments({ createdAt: { $gte: startOfDay, $lt: endOfDay } }),
+        providerModal.countDocuments({ createdAt: { $gte: startOfDay, $lt: endOfDay } }),
+        freelancerModel.countDocuments({ createdAt: { $gte: startOfDay, $lt: endOfDay } }),
+        jobApplicationModal.countDocuments({ createdAt: { $gte: startOfDay, $lt: endOfDay } }),
+        ProjectApplicationModal.countDocuments({ createdAt: { $gte: startOfDay, $lt: endOfDay } })
+      ]);
 
       data.push({
         Date: formattedDate,
-        count: registeredUsersCount,
+        counts: {
+          registeredUsersCount,
+          registeredProviderCount,
+          registeredFreelancerCount,
+          registeredPostCount,
+          registeredProjectCount
+        },
       });
     } catch (error) {
       console.error(`Error fetching data for ${formattedDate}:`, error);
     }
   }
+
   return data;
 };
+
+
 
 const getActiveUserStatistics = async (days = 7) => {
   const data = [];
 
   for (let i = 0; i < days; i++) {
     const today = new Date();
-    const startOfDay = new Date(today);
-    startOfDay.setDate(today.getDate() - i);
-    startOfDay.setHours(0, 0, 0, 0);
+    const startOfDay = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i, 0, 0, 0, 0));
+    const endOfDay = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i, 23, 59, 59, 999));
 
-    const endOfDay = new Date(today);
-    endOfDay.setDate(today.getDate() - i);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    const formattedDate = `${startOfDay
-      .getDate()
-      .toString()
-      .padStart(2, "0")}/${(startOfDay.getMonth() + 1)
-      .toString()
-      .padStart(2, "0")}/${startOfDay.getFullYear()}`;
+    const formattedDate = `${startOfDay.getUTCDate().toString().padStart(2, "0")}/${(startOfDay.getUTCMonth() + 1).toString().padStart(2, "0")}/${startOfDay.getUTCFullYear()}`;
 
     try {
       const activeUsersCount = await UserModal.countDocuments({

@@ -19,6 +19,7 @@ import http from "http";
 import { freelancerRouter } from "./routers/FreelanceRouter.js";
 import { notificationRouter } from "./routers/NotificationRouter.js";
 import { ReportRouter } from "./routers/ReportRouter.js";
+import { AdminRouter } from "./routers/AdminRouter.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,6 +49,7 @@ app.use("/projects", ProjectAppRouter);
 app.use("/uploader", UploaderRouter);
 app.use("/notifications",notificationRouter)
 app.use("/reports",ReportRouter);
+app.use("/admin",AdminRouter)
 
 
 app.use(notFound);
