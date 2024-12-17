@@ -147,7 +147,28 @@ export const getAllAccountAndApplicationsCount = asyncHandler(
 
 //Get all user and it totalCount with filter based on fields
 export const getAllSeekers = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 1, filter = {} } = req.query;
+  const { page = 1, limit = 1 ,isBlocked , q} = req.query;
+
+  let filter={}
+  if(isBlocked)
+  {
+    if(isBlocked === "false")
+    {
+      filter={...filter, isBlocked:false}
+    }else{
+      filter={...filter,isBlocked:true}
+    }
+    
+  }
+
+  if(q)
+  {
+    filter = {...filter , $or: [
+      { name: { $regex: "^" + q, $options: "i" } },
+      { user_id: { $regex: "^" + q, $options: "i" } },
+      { email: { $regex: "^" + q, $options: "i" } }
+    ]}
+  }
   const parsePage = parseInt(page);
   const parseLimit = parseInt(limit);
   const allSeekers = await getAllUsers(parsePage, parseLimit, filter); //Change filter
@@ -188,7 +209,7 @@ export const getRegistrationCount = asyncHandler(async (req, res) => {
 });
 
 export const getActiveUserCount = asyncHandler(async (req, res) => {
-  const { days } = req.query;
+  let { days } = req.query;
   if (days) {
     days = parseInt(days);
   }
