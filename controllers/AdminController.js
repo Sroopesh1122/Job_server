@@ -198,6 +198,8 @@ export const getAllProviders = asyncHandler(async (req, res) => {
       { email: { $regex: "^" + q, $options: "i" } }
     ]}
   }
+  const parsePage = parseInt(page);
+  const parseLimit = parseInt(limit);
   const allProviders = await getAllProvidersAccount(
     parsePage,
     parseLimit,
@@ -229,6 +231,8 @@ export const getAllFreelancers = asyncHandler(async (req, res) => {
       { email: { $regex: "^" + q, $options: "i" } }
     ]}
   }
+  const parsePage = parseInt(page);
+  const parseLimit = parseInt(limit);
   const allFreelancers = await getAllFreelancerAccount(
     parsePage,
     parseLimit,
