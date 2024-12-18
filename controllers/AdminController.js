@@ -147,7 +147,7 @@ export const getAllAccountAndApplicationsCount = asyncHandler(
 
 //Get all user and it totalCount with filter based on fields
 export const getAllSeekers = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 1 ,isBlocked , q} = req.query;
+  const { page = 1, limit = 10 ,isBlocked , q} = req.query;
 
   let filter={}
   if(isBlocked)
@@ -157,9 +157,9 @@ export const getAllSeekers = asyncHandler(async (req, res) => {
       filter={...filter, isBlocked:false}
     }else{
       filter={...filter,isBlocked:true}
-    }
-    
+    } 
   }
+
 
   if(q)
   {
@@ -176,9 +176,28 @@ export const getAllSeekers = asyncHandler(async (req, res) => {
 });
 
 export const getAllProviders = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 1, filter = {} } = req.query;
-  const parsePage = parseInt(page);
-  const parseLimit = parseInt(limit);
+  const { page = 1, limit = 1 ,isBlocked , q} = req.query;
+
+  let filter={}
+  if(isBlocked)
+  {
+    if(isBlocked === "false")
+    {
+      filter={...filter, isBlocked:false}
+    }else{
+      filter={...filter,isBlocked:true}
+    } 
+  }
+
+  
+  if(q)
+  {
+    filter = {...filter , $or: [
+      { name: { $regex: "^" + q, $options: "i" } },
+      { user_id: { $regex: "^" + q, $options: "i" } },
+      { email: { $regex: "^" + q, $options: "i" } }
+    ]}
+  }
   const allProviders = await getAllProvidersAccount(
     parsePage,
     parseLimit,
@@ -188,9 +207,28 @@ export const getAllProviders = asyncHandler(async (req, res) => {
 });
 
 export const getAllFreelancers = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 1, filter = {} } = req.query;
-  const parsePage = parseInt(page);
-  const parseLimit = parseInt(limit);
+  const { page = 1, limit = 1 ,isBlocked , q} = req.query;
+
+  let filter={}
+  if(isBlocked)
+  {
+    if(isBlocked === "false")
+    {
+      filter={...filter, isBlocked:false}
+    }else{
+      filter={...filter,isBlocked:true}
+    } 
+  }
+
+  
+  if(q)
+  {
+    filter = {...filter , $or: [
+      { name: { $regex: "^" + q, $options: "i" } },
+      { user_id: { $regex: "^" + q, $options: "i" } },
+      { email: { $regex: "^" + q, $options: "i" } }
+    ]}
+  }
   const allFreelancers = await getAllFreelancerAccount(
     parsePage,
     parseLimit,
