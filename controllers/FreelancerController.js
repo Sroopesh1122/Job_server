@@ -341,6 +341,8 @@ export const getFreelancerProfile = asyncHandler(async(req,res)=>{
   {
     throw new Error("Account Not Found")
   }
+  findUser.lastActive = new Date();
+  await findUser.save();
   return res.json(findUser)
 })
 

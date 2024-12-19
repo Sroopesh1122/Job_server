@@ -87,6 +87,10 @@ const providerSchema = new mongoose.Schema(
     isVerified:{
       type:Boolean,
       default:false
+    },
+    lastActive:{
+      type:Date,
+      default:new Date(),
     }
   },
   { timestamps: true }

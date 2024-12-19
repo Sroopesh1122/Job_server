@@ -255,9 +255,13 @@ export const getActiveUserCount = asyncHandler(async (req, res) => {
   if (days) {
     days = parseInt(days);
   }
-  const resData = await getActiveUserStatistics(days);
-  return res.json(resData);
+  const seekerData = await getActiveUserStatistics(days);
+  const providerData = await getActiveProviderStatistics(days);
+  const freelancerData = await getActiveFreelancerStatistics(days)
+  return res.json( { seekerData ,providerData,freelancerData});
 });
+
+
 
 
 export const getAllUsersCount = asyncHandler(async(req,res)=>{
@@ -383,7 +387,7 @@ const getActiveUserStatistics = async (days = 7) => {
 
       data.push({
         Date: formattedDate,
-        count: activeUsersCount,
+        counts: activeUsersCount,
       });
     } catch (error) {
       console.error(`Error fetching data for ${formattedDate}:`, error);
@@ -391,3 +395,59 @@ const getActiveUserStatistics = async (days = 7) => {
   }
   return data;
 };
+
+
+const getActiveProviderStatistics = async (days = 7) => {
+  const data = [];
+
+  for (let i = 0; i < days; i++) {
+    const today = new Date();
+    const startOfDay = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i, 0, 0, 0, 0));
+    const endOfDay = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i, 23, 59, 59, 999));
+
+    const formattedDate = `${startOfDay.getUTCDate().toString().padStart(2, "0")}/${(startOfDay.getUTCMonth() + 1).toString().padStart(2, "0")}/${startOfDay.getUTCFullYear()}`;
+
+    try {
+      const activeUsersCount = await providerModal.countDocuments({
+        lastActive: { $gte: startOfDay, $lt: endOfDay },
+      });
+
+      data.push({
+        Date: formattedDate,
+        counts: activeUsersCount,
+      });
+    } catch (error) {
+      console.error(`Error fetching data for ${formattedDate}:`, error);
+    }
+  }
+  return data;
+};
+
+const getActiveFreelancerStatistics = async (days = 7) => {
+  const data = [];
+
+  for (let i = 0; i < days; i++) {
+    const today = new Date();
+    const startOfDay = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i, 0, 0, 0, 0));
+    const endOfDay = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i, 23, 59, 59, 999));
+
+    const formattedDate = `${startOfDay.getUTCDate().toString().padStart(2, "0")}/${(startOfDay.getUTCMonth() + 1).toString().padStart(2, "0")}/${startOfDay.getUTCFullYear()}`;
+
+    try {
+      const activeUsersCount = await freelancerModel.countDocuments({
+        lastActive: { $gte: startOfDay, $lt: endOfDay },
+      });
+
+      data.push({
+        Date: formattedDate,
+        counts: activeUsersCount,
+      });
+    } catch (error) {
+      console.error(`Error fetching data for ${formattedDate}:`, error);
+    }
+  }
+  return data;
+};
+
+
+

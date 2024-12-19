@@ -280,6 +280,8 @@ export const providerGetProfile= asyncHandler(async(req,res)=>{
   {
     throw new Error("Account Not found");
   }
+  findAccount.lastActive = new Date();
+  await findAccount.save()
   return res.json(findAccount);
 })
 
