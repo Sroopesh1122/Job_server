@@ -78,7 +78,7 @@ export const authFreelancerMiddleware = asyncHandler(async (req, res, next) => {
 
 export const checkProviderVerify = asyncHandler (async(req,res,next)=>{
 
-  const {user} = req.user
+  const user = req.user
 
   if(user)
   {
@@ -98,7 +98,7 @@ export const checkProviderVerify = asyncHandler (async(req,res,next)=>{
 
 export const checkIsBlocked = asyncHandler (async(req,res,next)=>{
 
-  const {user} = req.user
+  const user = req.user
 
   if(user)
   {
