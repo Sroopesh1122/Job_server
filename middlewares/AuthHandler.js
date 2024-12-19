@@ -89,12 +89,7 @@ export const checkProviderVerify = asyncHandler (async(req,res,next)=>{
     else{
       throw new Error("This account is under verification,Try later");
     }
-
-  }else{
-    throw new Error("Account not found")
   }
-
-
 })
 
 
