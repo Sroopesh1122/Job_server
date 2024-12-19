@@ -110,6 +110,8 @@ export const checkIsBlocked = asyncHandler (async(req,res,next)=>{
       throw new Error("This account is block.Please contact account team");
     }
 
+  }else{
+    next()
   }
 })
 
