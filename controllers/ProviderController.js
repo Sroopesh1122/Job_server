@@ -144,6 +144,11 @@ export const providerSignin = asyncHandler(async (req, res) => {
       throw new Error("Account Not found");
     }
 
+    if(user.isBlocked)
+    {
+      throw new Error("Your Account is blocked.Please contact support team.")
+    }
+
     if (!(await user.isPasswordMatched(password))) {
       throw new Error("Incorrect password");
     }

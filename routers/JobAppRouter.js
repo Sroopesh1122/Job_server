@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authProviderMiddleware, getProfileMiddleware, waitMiddleware } from "../middlewares/AuthHandler.js";
+import { authProviderMiddleware, checkIsBlocked, checkProviderVerify, getProfileMiddleware, waitMiddleware } from "../middlewares/AuthHandler.js";
 import {
   addToShortList,
   createJobPost,
@@ -19,8 +19,8 @@ import { postData } from "../assets/dummyData.js";
 export const JobAppRouter = Router();
 
 
-JobAppRouter.post("/create", authProviderMiddleware, createJobPost);
-JobAppRouter.delete("/:id", authProviderMiddleware, deleteJobPost);
+JobAppRouter.post("/create", authProviderMiddleware,checkProviderVerify, checkIsBlocked, createJobPost);
+JobAppRouter.delete("/:id", authProviderMiddleware,checkProviderVerify,checkIsBlocked, deleteJobPost);
 JobAppRouter.get("/category", getAllCategoriesAndSubCategories);
 JobAppRouter.get("/suggestion",getProfileMiddleware ,getSuggestedJobs);
 JobAppRouter.post("/user/status",getApplicationStatus)
@@ -46,7 +46,7 @@ JobAppRouter.get("/", getProfileMiddleware,getAllJobPost);
 //For  Appplication Shortlist
 
 
-JobAppRouter.post("/post/shortlist/add",authProviderMiddleware,addToShortList)
-JobAppRouter.delete("/post.shortlist/delete",authProviderMiddleware,removeFromShortList)
-JobAppRouter.get("/post/shortlist",authProviderMiddleware,getPostShortList)
-JobAppRouter.post("/post/sendEmail",authProviderMiddleware ,sendEmailToAllShortlist)
+JobAppRouter.post("/post/shortlist/add",authProviderMiddleware,checkIsBlocked,addToShortList)
+JobAppRouter.delete("/post.shortlist/delete",authProviderMiddleware,checkIsBlocked,removeFromShortList)
+JobAppRouter.get("/post/shortlist",authProviderMiddleware,checkIsBlocked,getPostShortList)
+JobAppRouter.post("/post/sendEmail",authProviderMiddleware,checkIsBlocked ,sendEmailToAllShortlist)

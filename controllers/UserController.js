@@ -149,6 +149,10 @@ export const signin = asyncHandler(async (req, res) => {
     if (!user) {
       throw new Error("Account Not found");
     }
+    if(user.isBlocked)
+    {
+      throw new Error("Your Account is Blocked.Please contact support team.")
+    }
 
     if (!(await user.isPasswordMatched(password))) {
       throw new Error("Incorrect password");

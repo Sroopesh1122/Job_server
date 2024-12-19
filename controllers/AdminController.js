@@ -292,6 +292,34 @@ export const getAllUsersCount = asyncHandler(async(req,res)=>{
   return res.json(data)
 })
 
+
+
+//Verify Provider
+
+
+export const verifyProvider = asyncHandler(async (req,res)=>{
+
+  const { accountId } = req.body;
+
+  if(!accountId)
+  {
+    throw new Error("Account Id Required");
+  }
+
+  const findAccount = await providerModal.findOne({company_id:accountId});
+  if(!findAccount)
+  {
+    throw new Error("Account not found");
+  }
+
+  findAccount.isVerified = true;
+  await findAccount.save();
+
+  res.json({success:true,message:"Account verified Successfully"})
+
+
+})
+
 const getRegisteredStatistics = async (days = 7) => {
   const data = [];
 

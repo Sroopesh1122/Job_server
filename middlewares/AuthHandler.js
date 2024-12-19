@@ -76,6 +76,55 @@ export const authFreelancerMiddleware = asyncHandler(async (req, res, next) => {
 });
 
 
+export const checkProviderVerify = asyncHandler (async(req,res,next)=>{
+
+  const {user} = req.user
+
+  if(user)
+  {
+    if(user.isVerified)
+    {
+      next()
+    }
+    else{
+      throw new Error("This account is under verification,Try later");
+    }
+
+  }else{
+    throw new Error("Account not found")
+  }
+
+
+})
+
+
+
+//Check For block
+
+export const checkIsBlocked = asyncHandler (async(req,res,next)=>{
+
+  const {user} = req.user
+
+  if(user)
+  {
+    if(!user.isBlocked)
+    {
+      next()
+    }
+    else{
+      throw new Error("This account is block.Please contact account team");
+    }
+
+  }else{
+    throw new Error("Account not found")
+  }
+})
+
+
+
+
+
+
 
 
 export const getProfileMiddleware = asyncHandler(async (req, res, next) => {
