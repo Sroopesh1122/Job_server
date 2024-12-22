@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { blockUser, getActiveUserCount, getAllAccountAndApplicationsCount, getAllFreelancers, getAllProviders, getAllSeekers, getAllUsersCount, getRegistrationCount, unBlockkUser } from "../controllers/AdminController.js";
+import { blockUser, getActiveUserCount, getAllAccountAndApplicationsCount, getAllFreelancers, getAllProviders, getAllSeekers, getAllUsersCount, getRegistrationCount, unBlockkUser, verifyProvider } from "../controllers/AdminController.js";
 
 
 export const AdminRouter = Router();
@@ -13,3 +13,4 @@ AdminRouter.get("/freelancers",getAllFreelancers); //to get freelancer based on 
 AdminRouter.get("/satistics/all-users",getAllUsersCount);
 AdminRouter.get("/satistics/registration",getRegistrationCount);
 AdminRouter.get("/satistics/active-user",getActiveUserCount);
+AdminRouter.post("/provider/verify" ,verifyProvider);

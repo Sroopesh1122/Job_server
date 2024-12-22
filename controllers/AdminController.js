@@ -176,7 +176,8 @@ export const getAllSeekers = asyncHandler(async (req, res) => {
 });
 
 export const getAllProviders = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 1 ,isBlocked , q} = req.query;
+  const { page = 1, limit = 1 ,isBlocked , q ,isVerified} = req.query;
+
 
   let filter={}
   if(isBlocked)
@@ -189,12 +190,23 @@ export const getAllProviders = asyncHandler(async (req, res) => {
     } 
   }
 
+  if(isVerified)
+  {
+    if(isVerified === "false")
+      {
+        filter={...filter, isVerified:false}
+      }else{
+        filter={...filter,isVerified:true}
+      }
+
+  }
+
   
   if(q)
   {
     filter = {...filter , $or: [
-      { name: { $regex: "^" + q, $options: "i" } },
-      { user_id: { $regex: "^" + q, $options: "i" } },
+      { company_name: { $regex: "^" + q, $options: "i" } },
+      { company_id: { $regex: "^" + q, $options: "i" } },
       { email: { $regex: "^" + q, $options: "i" } }
     ]}
   }
@@ -227,7 +239,7 @@ export const getAllFreelancers = asyncHandler(async (req, res) => {
   {
     filter = {...filter , $or: [
       { name: { $regex: "^" + q, $options: "i" } },
-      { user_id: { $regex: "^" + q, $options: "i" } },
+      { freelancer_id: { $regex: "^" + q, $options: "i" } },
       { email: { $regex: "^" + q, $options: "i" } }
     ]}
   }
@@ -260,8 +272,6 @@ export const getActiveUserCount = asyncHandler(async (req, res) => {
   const freelancerData = await getActiveFreelancerStatistics(days)
   return res.json( { seekerData ,providerData,freelancerData});
 });
-
-
 
 
 export const getAllUsersCount = asyncHandler(async(req,res)=>{
@@ -321,6 +331,11 @@ export const verifyProvider = asyncHandler(async (req,res)=>{
 
   res.json({success:true,message:"Account verified Successfully"})
 
+
+})
+
+
+export const getAllVerificationPendingproviders = asyncHandler(async(req,res)=>{
 
 })
 
@@ -448,6 +463,8 @@ const getActiveFreelancerStatistics = async (days = 7) => {
   }
   return data;
 };
+
+
 
 
 
