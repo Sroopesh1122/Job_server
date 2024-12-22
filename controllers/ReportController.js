@@ -2,7 +2,7 @@ import asyncHandler from "express-async-handler";
 import { ReportModal } from "../modals/Reports.js";
 import UserModal from "../modals/User.js";
 import { providerModal } from "../modals/JobProvider.js";
-import  { jobApplicationModal } from "../modals/JobApplication.js";
+import { jobApplicationModal } from "../modals/JobApplication.js";
 
 // Add a Report
 export const reportUser = asyncHandler(async (req, res) => {
@@ -122,11 +122,7 @@ export const reportProviderPost = asyncHandler(async (req, res) => {
 
 //Get All reports based on reportedFor field value
 export const getAllReports = asyncHandler(async (req, res) => {
-  const { reportFor, page = 1, limit = 10 } = req.query;
-
-  if (!reportFor) {
-    throw new Error("Please provide a report category ('user'/'post').");
-  }
+  const { reportFor, page = 1, limit = 10, reportedTo } = req.query;
 
   const parsedPage = parseInt(page);
   const parsedLimit = parseInt(limit);
@@ -139,9 +135,21 @@ export const getAllReports = asyncHandler(async (req, res) => {
     throw new Error("Invalid page or limit values.");
   }
 
+  let filter = {};
+
+  if (reportFor) {
+    filter = { ...filter, reportFor };
+  }
+
+  if (reportedTo) {
+    filter = { ...filter, reportedTo };
+  }
+
   const allReports = [];
 
-  let findReports = await ReportModal.find({ reportFor })
+  const totalData = await ReportModal.countDocuments(filter);
+
+  let findReports = await ReportModal.find(filter)
     .sort({ createdAt: -1 })
     .skip((parsedPage - 1) * parsedLimit)
     .limit(parsedLimit);
@@ -174,13 +182,16 @@ export const getAllReports = asyncHandler(async (req, res) => {
       });
     }
     allReports.push({
-      ...report,
+      report,
       reportedTo: reportedToDetails,
       reportedBy: reportedByDetails,
       postDetails,
     });
   }
-  res.json(allReports);
+  res.json({
+    totalData,
+    reports: allReports,
+  });
 });
 
 //Get Report By reportId
@@ -191,7 +202,7 @@ export const getReportById = asyncHandler(async (req, res) => {
   }
 
   const report = await ReportModal.findOne({ report_id: reportId });
-  let reportDetails={};
+  let reportDetails = {};
 
   if (report) {
     let reportedByDetails = null;
@@ -220,7 +231,7 @@ export const getReportById = asyncHandler(async (req, res) => {
         job_id: report.postId,
       });
     }
-    reportDetails ={
+    reportDetails = {
       ...report,
       reportedTo: reportedToDetails,
       reportedBy: reportedByDetails,
@@ -228,7 +239,7 @@ export const getReportById = asyncHandler(async (req, res) => {
     };
   }
 
-  return res.json(reportDetails)
+  return res.json(reportDetails);
 });
 
 //Returns Report Count of speciific Account
@@ -242,4 +253,22 @@ export const getReportCount = asyncHandler(async (req, res) => {
   const totalReports = await ReportModal.find({ reportedTo: accountId });
 
   return res.json(totalReports);
+});
+
+//To get top reported user accounts;
+export const getTopReportedAccounts = asyncHandler(async (req, res) => {
+
+  const {limit=10} = req.query;
+
+  const topReportedUsers = await ReportModal.aggregate([
+    {
+      $group: {
+        _id: "$reportedTo",
+        reportCount: { $sum: 1 },
+      },
+    },
+    { $sort: { reportCount: -1 , } },
+    { $limit: limit }
+  ]);
+  res.json(topReportedUsers);
 });
