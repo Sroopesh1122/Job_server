@@ -8,6 +8,280 @@ import { ProjectApplicationModal } from "../modals/ProjectApplication.js";
 import { getAllUsers } from "./UserController.js";
 import { getAllProvidersAccount } from "./ProviderController.js";
 import { getAllFreelancerAccount } from "./FreelancerController.js";
+import { adminModal } from "../modals/Admin.js";
+import jwt from "jsonwebtoken";
+import otpGenerator from "otp-generator";
+import { sendMail } from "../utils/MailSender.js";
+import crypto from "crypto";
+import bcrypt from "bcryptjs";
+
+const otpStore = new Map();
+const OTP_EXPIRES_AT = 1 * 60 * 1000;
+const MAX_TRIES = 3;
+const COOLING_PERIOD = 5 * 60 * 1000;
+
+export const sendUserOtp = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    throw new Error("Email is required!");
+  }
+
+  const adminCount = await adminModal.countDocuments();
+
+  if (adminCount >= 2) {
+    throw new Error("Admin account limit reached. Only 2 admins are allowed.");
+  }
+
+  const adminExists = await adminModal.findOne({ email });
+  if (adminExists) {
+    throw new Error("Email already registered.");
+  }
+
+  let otpData = otpStore.get(email);
+
+  if (otpData) {
+    const { tries, lastAttemptMade } = otpData;
+
+    if (tries >= MAX_TRIES) {
+      const timeSinceLastAttempt = Date.now() - lastAttemptMade;
+      if (timeSinceLastAttempt < COOLING_PERIOD) {
+        const timeLeft = Math.ceil((COOLING_PERIOD - timeSinceLastAttempt) / 1000);
+        return res.status(400).json({
+          message: `You have exceeded the maximum number of attempts. Please try again in ${
+            timeLeft > 60 ? Math.ceil(timeLeft / 60) : timeLeft
+          } ${timeLeft > 60 ? 'minute' : 'seconds'}${
+            timeLeft > 60 && Math.ceil(timeLeft / 60) > 1 ? 's' : ''
+          }.`,
+        });
+      } else {
+        otpStore.set(email, { tries: 0, lastAttemptMade: Date.now() });
+      }
+    }
+  }
+
+  const otp = otpGenerator.generate(6, {
+    uppercase: false,
+    specialChars: false,
+  });
+
+  otpStore.set(email, {
+    otp: otp,
+    expiresAt: Date.now() + OTP_EXPIRES_AT,
+    tries: otpData ? otpData.tries + 1 : 1,
+    lastAttemptMade: Date.now(),
+  });
+
+  await sendMail({
+    from: process.env.MAIL_ID,
+    to: email,
+    subject: "Your OTP for Signup",
+    text: `Your OTP is ${otp}. It is valid for 1 minute.`,
+    html: `<p>Your OTP is <strong>${otp}</strong>. It is valid for 1 minute.</p>`,
+  });
+
+  const updatedOTPData = otpStore.get(email);
+
+  const triesLeft = MAX_TRIES - updatedOTPData.tries;
+
+  res.json({
+    message: "OTP sent successfully!",
+    triesLeft,
+  });
+});
+
+
+export const verifyUserOtp = asyncHandler(async(req, res) => {
+  const { email, otp } = req.body;  
+
+  if(!email || !otp) {
+    throw new Error("Email and OTP are required!");
+  }
+
+  const otpStoredPreviously = otpStore.get(email);
+
+  if(!otpStoredPreviously) {
+    throw new Error("OTP has expired");
+  }
+
+  const { otp: validOtp, expiresAt } = otpStoredPreviously;
+
+  if(Date.now() > expiresAt) {
+    otpStore.delete(email);
+    throw new Error("OTP has expired");
+  }
+
+  if(validOtp === otp) {
+    otpStore.delete(email);
+    res.json({ message: "OTP verified successfully!" });
+  } else {
+    throw new Error("Invalid OTP!");
+  }
+});
+
+export const adminSignUp = asyncHandler(async (req, res) => {
+  const { email, password, admin_name } = req.body;
+
+  if (!email || !password ||!admin_name) {
+    throw new Error("All fields required");
+  }
+
+  try {
+    const findAdmin = await adminModal.findOne({ "email": email });
+    if (findAdmin) {
+      throw new Error("Email already exists");
+    }
+
+    const data = {
+      admin_name, email, auth_details: { password },
+    };
+
+    const admin = await adminModal.create(data);
+
+    const resData = {
+      adminId: admin.admin_id,
+      docId: admin._id
+    };
+
+    if (admin) {
+      res.json({ authToken: await jwt.sign(resData, process.env.JWT_SECRET_TOKEN)});
+    } else {
+      throw new Error("Account creation failed");
+    }
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+export const adminSignIn = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    throw new Error("All fields required");
+  }
+
+  try {
+    const admin = await adminModal.findOne({ "email": email });
+    if (!admin) {
+      throw new Error("Accout not found");
+    }
+
+    if(!(await admin.isPasswordMatched(password))) {
+      throw new Error("Incorrect password");
+    }
+
+    const resData = {
+      adminId: admin.admin_id,
+      docId: admin._id
+    };
+
+    res.json(await jwt.sign(resData, process.env.JWT_SECRET_TOKEN));
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+export const AdminForgotPasswordHandler = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    throw new Error("Email required!!");
+  }
+  try {
+    const user = await adminModal.findOne({ email: email });
+    if (!user) {
+      throw new Error("Account Not Found");
+    }
+    const resetToken = await user.generatePasswordResetToken();
+    await user.save();
+    if (user) {
+      const resetURL = `${process.env.FRONT_END_URL}/admin/reset-password/${resetToken}`;
+      const htmlContent = `
+        <p>Hi ${user.admin_name},</p>
+        <p>We received a request to reset your admin password. Click the link below to reset it. This link will expire in 5 minutes:</p>
+        <p><a href="${resetURL}">Reset your password</a></p>
+        <p>If you did not request a password reset, please ignore this email or contact support if you have any concerns.</p>
+        <p>Thank you,<br>Emploez.in Team</p>
+      `;
+    
+      const textContent = `
+        Hi ${user.admin_name},
+        
+        We received a request to reset your admin password. Copy and paste the link below into your browser to reset it. This link will expire in 5 minutes:
+        
+        ${resetURL}
+        
+        If you did not request a password reset, please ignore this email or contact support if you have any concerns.
+    
+        Thank you,
+        Emploez.in Team
+      `;
+    
+      const data = {
+        to: email,
+        from: `${process.env.MAIL_ID}`, // Use a verified and recognizable email address
+        subject: "Admin Password Reset Request",
+        text: textContent,
+        html: htmlContent,
+      };
+    
+      try {
+        await sendMail(data);
+      } catch (error) {
+        console.log(error);
+      }
+      res.json({ message: "Password reset email sent" });
+    } else {
+      throw new Error("Profile Update Failed");
+    }
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+export const AdminPasswordResetHandler = asyncHandler(async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  if (!password) {
+      throw new Error("New password is required!");
+  }
+
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+  try {
+      const user = await adminModal.findOne({
+          "auth_details.passwordResetToken": hashedToken,
+      });
+
+      if (!user) {
+          throw new Error("Invalid token");
+      }
+
+      if (Date.now() > user.auth_details.passwordResetExpiresAt) {
+          throw new Error("Token expired! Try again later");
+      }
+
+      const isSameAsCurrentPassword = await bcrypt.compare(password, user.auth_details.password);
+
+      if (isSameAsCurrentPassword) {
+          throw new Error("Cannot reuse the current password.");
+      }
+
+      user.auth_details.password = password;
+      user.auth_details.passwordResetToken = undefined;
+      user.auth_details.passwordResetExpiresAt = undefined;
+
+      await user.save();
+
+      res.json({ message: "Password has been reset successfully!" });
+  } catch (error) {
+      throw new Error(error.message || "Failed to reset password");
+  }
+});
+
+
+
 
 //To block User (seeker,provider,freelancer)
 export const blockUser = asyncHandler(async (req, res) => {
