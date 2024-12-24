@@ -3,6 +3,7 @@ import userModal from "../modals/User.js";
 import jwt, { decode } from "jsonwebtoken";
 import { providerModal } from "../modals/JobProvider.js";
 import { freelancerModel } from "../modals/Freelancer.js";
+import { adminModal } from "../modals/Admin.js";
 
 export const authUserMiddleware = asyncHandler(async (req, res, next) => {
   let token = null;
@@ -150,3 +151,28 @@ export const waitMiddleware = asyncHandler(async (req,res,next)=>{
   },2000)
 })
 
+
+export const authAdminMiddleware = asyncHandler(async(req, res, next) => {
+  let token = null;
+
+  if(req?.headers?.authorization) {
+    token = req?.headers?.authorization.split(" ")[1];
+    let decoded;
+
+    try {
+      decoded = await jwt.verify(token, process.env.JWT_SECRET_TOKEN);
+    } catch (err) {
+      throw new Error("Not Authorized: Token expired");
+    }
+
+    const user = await adminModal.findOne({ admin_id: decoded.adminId });
+    if (!user) {
+      throw new Error("Admin account not found");
+    }
+
+    req.user = user;
+    next();
+  } else {
+    throw new Error("There is no token attached to the header");
+  }
+});
