@@ -280,7 +280,18 @@ export const AdminPasswordResetHandler = asyncHandler(async (req, res) => {
   }
 });
 
+export const getAdminDetails = asyncHandler(async(req, res, next) => {
+  const { admin_id } = req.user;
 
+  const admin = await adminModal.findOne({ "admin_id": admin_id });
+  if (admin) {
+    admin.lastActive = new Date();
+    await admin.save()
+    return res.json(admin);
+  } else {
+    throw new Error("Admin not found");
+  }
+});
 
 
 //To block User (seeker,provider,freelancer)

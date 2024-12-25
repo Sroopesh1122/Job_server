@@ -359,5 +359,34 @@ export const getAllFreelancerAccount = async(page=1,limit=10,filter={})=>{
 
 }
 
+export const getFreelancerProfileById= asyncHandler(async(req,res)=>{
+  const {id} = req.params;
+
+  const query =[];
+
+  const matchStage = {};
+
+  matchStage.freelancer_id = id;
+
+
+  query.push({$match : matchStage})
+
+  query.push({
+    $lookup: {
+      from: "projects",
+      localField: "project_details.projects.projectId",
+      foreignField: "project_id",
+      as: "projects_info",
+    },
+  });
+
+  const findAccount = await freelancerModel.aggregate(query)
+  if(!findAccount)
+  {
+    throw new Error("Account Not found");
+  }
+    return res.json({accountData : findAccount[0]});
+})
+
 
 

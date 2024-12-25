@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { blockUser, getActiveUserCount, getAllAccountAndApplicationsCount, getAllFreelancers, getAllProviders, getAllSeekers, getAllUsersCount, getRegistrationCount, unBlockkUser, verifyProvider, adminSignUp, adminSignIn, sendUserOtp, verifyUserOtp, AdminForgotPasswordHandler, AdminPasswordResetHandler } from "../controllers/AdminController.js";
+import { blockUser, getActiveUserCount, getAllAccountAndApplicationsCount, getAllFreelancers, getAllProviders, getAllSeekers, getAllUsersCount, getRegistrationCount, unBlockkUser, verifyProvider, adminSignUp, adminSignIn, sendUserOtp, verifyUserOtp, AdminForgotPasswordHandler, AdminPasswordResetHandler, getAdminDetails } from "../controllers/AdminController.js";
 import { authAdminMiddleware, isAdmin } from "../middlewares/AuthHandler.js";
 
 
@@ -16,6 +16,8 @@ AdminRouter.post("/reset-password/:token", AdminPasswordResetHandler);
 
 // AdminRouter.use(authAdminMiddleware);
 // AdminRouter.use(isAdmin);
+
+AdminRouter.get("/get-admin",authAdminMiddleware,getAdminDetails);
 
 AdminRouter.post("/user/block",authAdminMiddleware,blockUser);
 AdminRouter.post("/user/unblock",authAdminMiddleware,unBlockkUser);
