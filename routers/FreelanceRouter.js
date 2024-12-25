@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authFreelancerMiddleware, authProviderMiddleware, checkIsBlocked, waitMiddleware } from "../middlewares/AuthHandler.js";
-import { freelancerAllPost, FreelancerForgotPasswordHandler,  FreelancerPasswordResetHandler, FreelancerSignin, FreelancerSignup, FreelancerUpdateUser, getFreelancerProfile, sendFreelancerOTP, verifyFreelancerOTP } from "../controllers/FreelancerController.js";
+import { freelancerAllPost, FreelancerForgotPasswordHandler,  FreelancerPasswordResetHandler, FreelancerSignin, FreelancerSignup, FreelancerUpdateUser, getFreelancerProfile, getFreelancerProfileById, sendFreelancerOTP, verifyFreelancerOTP } from "../controllers/FreelancerController.js";
 
 export const freelancerRouter = Router();
 
@@ -14,3 +14,5 @@ freelancerRouter.get("/profile",authFreelancerMiddleware, checkIsBlocked,getFree
 
 freelancerRouter.post("/send-otp", sendFreelancerOTP)
 freelancerRouter.post("/verify-otp", verifyFreelancerOTP)
+
+freelancerRouter.get("/:id", getFreelancerProfileById);
